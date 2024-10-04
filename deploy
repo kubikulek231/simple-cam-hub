@@ -1,0 +1,24 @@
+#!/bin/bash
+LOCAL_DIR=~/cam-webapp/www            # Path to your local directory
+TARGET_DIR=/var/www/html                # Target directory on the server
+USER=kubikulek231                 # Your username if using sudo
+
+# Remove the target directory
+echo "Removing $TARGET_DIR ..."
+sudo rm -rf $TARGET_DIR
+
+# Create a new target directory
+echo "Creating $TARGET_DIR ..."
+sudo mkdir -p $TARGET_DIR
+
+# Copy local directory to target directory
+echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
+sudo cp -r $LOCAL_DIR/* $TARGET_DIR/
+
+# Set proper permissions for the /var/www directory
+echo "Setting permissions for $TARGET_DIR ..."
+sudo chown -R $USER:www-data $TARGET_DIR
+sudo chmod -R 755 $TARGET_DIR
+
+echo "Deployment complete!"
+

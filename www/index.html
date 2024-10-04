@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Streams</title>
+    <script src="js/library/hls/hls.js"></script>
+    <link rel="stylesheet" href="css/main.css"> <!-- Link to the CSS file -->
+    <script type="module" src="js/main.js"></script><!-- Link to the JavaScript file -->
+</head>
+<body>
+    <div class="container">
+        <h1>Camera Streams</h1>
+        <div id="videoContainer"></div>
+    </div>
+
+    <div id="streamOverlayContainer" class="stream-overlay" hidden>
+        <div class="blocker-overlay stream-overlay" hidden></div>
+        <div id="streamOverlayContentWrapper" class="stream-overlay">
+            <div id="streamOverlayVideoContainer" class="stream-overlay" hidden></div>
+            <div id="streamOverlayButtonContainer" class="stream-overlay" hidden>
+                <button id="exitStreamOverlayButton" class="button">ZAVŘÍT ZVĚTŠENÝ REŽIM</button>
+                <div id="streamOverlayHeader" class="stream-overlay" hidden>Biggus stream name</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="footageOverlayContainer" class="footage-overlay" hidden>
+        <div class="blocker-overlay footage-overlay" hidden></div>
+        <div id="footageOverlayContentWrapper" class="footage-overlay">
+            <div id="footageOverlayVideoContainer" class="footage-overlay" hidden></div>
+            <div id="footageOverlayButtonContainer" class="footage-overlay" hidden>
+                <button id="exitFootageOverlayButton" class="button">ZAVŘÍT PROHLÍŽEČ ZÁZNAMŮ</button>
+                <div id="footageOverlayHeader" class="footage-overlay" hidden>Biggus footage name</div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

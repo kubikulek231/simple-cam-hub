@@ -1,0 +1,22 @@
+{
+  "cameras": [
+      {
+          "id": 0,
+          "title": "Front Entrance",
+          "source": "https://devstreaming-cdn.apple.com/videos/streaming/examples/adv_dv_atmos/main.m3u8",
+          "footageDirectory": "/var/www/html/footage/front-entrance"
+      },
+      {
+          "id": 1,
+          "title": "Backyard",
+          "source": "https://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8",
+          "footageDirectory": "/var/www/html/footage/backyard"
+      },
+      {
+          "id": 2,
+          "title": "Garage",
+          "source": "https://test-streams.mux.dev/tos_ismc/main.m3u8",
+          "footageDirectory": "/var/www/html/footage/garage"
+      }
+  ]
+}
