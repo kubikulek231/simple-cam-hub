@@ -17,10 +17,45 @@
     <div id="streamOverlayContainer" class="stream-overlay" hidden>
         <div class="blocker-overlay stream-overlay" hidden></div>
         <div id="streamOverlayContentWrapper" class="stream-overlay">
+            <div id="streamOverlayHeader" class="stream-overlay" hidden>Zvětšený režim</div>
+            <div id="streamOverlayDescriptor" class="stream-overlay" hidden>Přehrávání živého videa z:</div>
             <div id="streamOverlayVideoContainer" class="stream-overlay" hidden></div>
             <div id="streamOverlayButtonContainer" class="stream-overlay" hidden>
                 <button id="exitStreamOverlayButton" class="button">ZAVŘÍT ZVĚTŠENÝ REŽIM</button>
-                <div id="streamOverlayHeader" class="stream-overlay" hidden>Biggus stream name</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="browserOverlayContainer" class="browser-overlay" hidden>
+        <div class="blocker-overlay browser-overlay" hidden></div>
+        <div id="browserOverlayContentWrapper" class="browser-overlay">
+            <div id="browserOverlayHeader" class="browser-overlay" hidden>Prohlížeč záznamů</div>
+            <div id="browserOverlayDescriptor" class="browser-overlay" hidden>-</div>
+            <div id="browserOverlayDateTime" class="browser-overlay" hidden>-</div>
+            <div id="browserOverlayVideoContainer" class="browser-overlay" hidden>
+                <table id="browserTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Rok</th>
+                            <th>Den v týdnu</th>
+                            <th>Den</th>
+                            <th>Měsíc</th>
+                            <th>Čas</th>
+                            <th>Spustit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+            <div id="browserOverlayPageContainer" class="browser-overlay" hidden>
+                <div id="browserPageNum" pageNum="1" pageTotal="1" class="browser-overlay" hidden>Strana 1 z 1</div>
+                <button id="browserPagePrev" class="button" disabled>PŘEDCHOZÍ STRANA</button>
+                <button id="browserPageNext" class="button">DALŠÍ STRANA</button>
+            </div>
+            <div id="browserOverlayButtonContainer" class="browser-overlay" hidden>
+                <button id="exitBrowserOverlayButton" class="button">ZAVŘÍT PROHLÍŽEČ ZÁZNAMŮ</button>
             </div>
         </div>
     </div>
@@ -28,10 +63,15 @@
     <div id="footageOverlayContainer" class="footage-overlay" hidden>
         <div class="blocker-overlay footage-overlay" hidden></div>
         <div id="footageOverlayContentWrapper" class="footage-overlay">
+            <div id="footageOverlayHeader" class="footage-overlay" hidden>Přehrávač záznamů</div>
+            <div id="footageOverlayDescriptorContainer" class="footage-overlay" hidden>
+                <div id="footageOverlayDescriptorTitle" class="footage-overlay" hidden></div>
+                <div id="footageOverlayDescriptorDate" class="footage-overlay" hidden></div>
+                <div id="footageOverlayDescriptorTime" class="footage-overlay" hidden></div>
+            </div>
             <div id="footageOverlayVideoContainer" class="footage-overlay" hidden></div>
             <div id="footageOverlayButtonContainer" class="footage-overlay" hidden>
-                <button id="exitFootageOverlayButton" class="button">ZAVŘÍT PROHLÍŽEČ ZÁZNAMŮ</button>
-                <div id="footageOverlayHeader" class="footage-overlay" hidden>Biggus footage name</div>
+                <button id="exitFootageOverlayButton" class="button">ZAVŘÍT PŘEHRÁVAČ ZÁZNAMŮ</button>
             </div>
         </div>
     </div>

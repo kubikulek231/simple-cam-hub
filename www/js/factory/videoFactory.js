@@ -19,34 +19,28 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     return video;
 }
 
-export function createStreamedVideo(videoSource, controls = true, videoType = 'video/mp4; codecs="hev1"') {
+export function createStreamedVideo(videoSource, controls = true, videoType = 'application/vnd.apple.mpegurl') {
     const video = document.createElement('video');
     video.controls = controls;  // Enable browser default controls
     video.muted = true;
 
-    // Set the video source to the local server's video file
-    const source = document.createElement('source');
-    source.src = videoSource;
-    source.type = videoType;
-
-    video.appendChild(source);
-
-    // Check if HLS is supported
+    // Check if HLS is supported by the browser via Hls.js
     if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(videoSource);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            video.load();
-            video.play();
+            video.play(); // Start video after manifest is parsed
         });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // If HLS is supported natively (e.g., Safari)
+    } else if (video.canPlayType(videoType)) {
+        // If HLS is natively supported (e.g., Safari)
         video.src = videoSource;
         video.addEventListener('loadedmetadata', function () {
-            video.load();
-            video.play();
+            video.play();  // Start video after metadata is loaded
         });
+    } else {
+        console.error('HLS is not supported in this browser.');
     }
+
     return video;
 }

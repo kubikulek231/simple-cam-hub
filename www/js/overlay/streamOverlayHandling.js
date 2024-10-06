@@ -1,5 +1,6 @@
-import { createStreamedVideo } from "./factory/videoFactory.js";
-import { loadedCameraConfList } from "./json-loaders/camConfLoader.js"
+import { createStreamedVideo } from "../factory/videoFactory.js";
+import { loadedCameraConfList } from "../json-loaders/camConfLoader.js"
+import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 
 
 export function hideStreamOverlay() {
@@ -11,16 +12,16 @@ export function hideStreamOverlay() {
     const videoContainerElement = document.getElementById("streamOverlayVideoContainer");
     const videoElement = videoContainerElement.getElementsByTagName("video")[0];
     videoElement.remove();
-
 }
 
 export function showStreamOverlay(cameraConf) {
     const streamOverlayElements = document.getElementsByClassName("stream-overlay");
-
+    const descriptorElement = document.getElementById("streamOverlayDescriptor");
     Array.from(streamOverlayElements).forEach(element => {
         element.removeAttribute('hidden'); // Show the element
     });
     const videoContainerElement = document.getElementById("streamOverlayVideoContainer");
+    descriptorElement.textContent = "Přehrávání živého videa z kamery: " + cameraConf.title;
     videoContainerElement.appendChild(createStreamedVideo(cameraConf.source));
 }
 
@@ -30,11 +31,13 @@ export function handleStreamOverlay() {
         button.addEventListener('click', (event) => {
             const cameraID = event.target.parentNode.parentNode.getAttribute("camera-id");
             showStreamOverlay(loadedCameraConfList[cameraID]);
+            pauseAllStreams();
         });
     });
 
     const exitOverlayButtonElement = document.getElementById("exitStreamOverlayButton");
     exitOverlayButtonElement.addEventListener('click', (event) => {
         hideStreamOverlay();
+        resumeAllStreams();
     });
 }

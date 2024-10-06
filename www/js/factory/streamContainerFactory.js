@@ -11,8 +11,8 @@ function createStreamContainerControls() {
     button1.textContent = 'ZVĚTŠIT'; // Set text content
 
     const button2 = document.createElement('button'); // Create another button element
-    button2.classList = 'button button-open-footage-overlay'; // Set class names
-    button2.textContent = 'PROJÍT ZÁZNAM'; // Set text content
+    button2.classList = 'button button-open-browser-overlay'; // Set class names
+    button2.textContent = 'PROJÍT ZÁZNAMY'; // Set text content
 
     // Append buttons to the controls container
     controlsContainer.appendChild(button1);

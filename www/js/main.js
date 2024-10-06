@@ -1,7 +1,8 @@
 import { handleStreamContainers } from "./streamContainerHandling.js";
 import { loadCameraConf } from "./json-loaders/camConfLoader.js";
-import { handleStreamOverlay } from "./streamOverlayHandling.js";
-import { handleFootageOverlay } from "./footageOverlayHandling.js";
+import { handleStreamOverlay } from "./overlay/streamOverlayHandling.js";
+import { handleFootageOverlay } from "./overlay/footageOverlayHandling.js";
+import { handleBrowserOverlay } from "./overlay/browserOverlayHandling.js";
 
 // Call everything when DOM content is loaded
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,5 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         handleStreamContainers();
         handleStreamOverlay();
         handleFootageOverlay();
+        handleBrowserOverlay();
     }
 });

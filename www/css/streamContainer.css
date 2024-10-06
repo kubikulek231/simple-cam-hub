@@ -1,0 +1,47 @@
+#videoContainer {
+    display: flex; /* Use flex to arrange video wrappers */
+    flex-wrap: wrap; /* Allow items to wrap into new rows */
+    justify-content: center; /* Center align items horizontally */
+    align-content: center; /* Center align items vertically */
+    padding: 10px; /* Add some padding around the container */
+    overflow: hidden; /* Prevent overflow if content is too tall */
+}
+
+.stream-container {
+    background-color: lightblue; /* Just for visibility */
+    display: flex; /* Use flex to arrange items */
+    flex-direction: column; /* Stack items vertically */
+    justify-content: center; /* Center items vertically */
+    align-items: center; /* Center items horizontally */
+    padding: 10px; /* Add some padding for aesthetics */
+    width: calc(50% - 20px); /* Set width to 50% minus gap for two items per row */
+    margin: 10px; /* Add margin to create space between items */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.stream-container > video {
+    width: 100%; /* Make video responsive */
+    height: auto; /* Maintain aspect ratio */
+}
+
+.stream-container > h2 {
+    margin: 0; /* Remove default margin */
+    text-align: center; /* Center align text */
+    margin-bottom: 10px; /* Space between title and video */
+}
+
+@media (max-width: 600px) {
+    #videoContainer {
+        height: auto; /* Allow height to adjust on smaller screens */
+        padding: 5px; /* Reduce padding on small screens */
+    }
+
+    .stream-container {
+        width: 100%; /* Full width for small screens */
+        margin: 5px 0; /* Margin adjustments for small screens */
+    }
+}
+
+.stream-container-video-wrapper {
+    height: 85%;
+}

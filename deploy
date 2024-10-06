@@ -1,7 +1,11 @@
 #!/bin/bash
-LOCAL_DIR=~/cam-webapp/www            # Path to your local directory
+LOCAL_DIR=~/simple-cam-hub/www         # Path to your local directory
 TARGET_DIR=/var/www/html                # Target directory on the server
 USER=kubikulek231                 # Your username if using sudo
+CCTV_FOOTAGE_DIR=~/footage
+CCTV_WWW_DIR=/var/www/html/footage
+CUSTOM_NGINX_CONF_PATH=~/simple-cam-hub/nginx.conf
+NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
 
 # Remove the target directory
 echo "Removing $TARGET_DIR ..."
@@ -15,10 +19,52 @@ sudo mkdir -p $TARGET_DIR
 echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
 sudo cp -r $LOCAL_DIR/* $TARGET_DIR/
 
-# Set proper permissions for the /var/www directory
+# Set ownership to www-data for the web root directory
 echo "Setting permissions for $TARGET_DIR ..."
-sudo chown -R $USER:www-data $TARGET_DIR
+sudo chown -R $USER:www-data $TARGET_DIR  # Set group to www-data
 sudo chmod -R 755 $TARGET_DIR
+
+# Create symbolic link to the footage directory
+echo "Creating symbolic link to the CCTV footage directory ..."
+sudo ln -s $CCTV_FOOTAGE_DIR $CCTV_WWW_DIR
+
+echo "Create www-data group and add www-data user to it ..."
+# Create the group
+sudo groupadd www-data
+# Add the www-data user to the group
+sudo usermod -aG www-data www-data
+
+# Set ownership to www-data for the footage directory
+echo "Setting permissions for $CCTV_WWW_DIR ..."
+sudo chown -R $USER:www-data $CCTV_WWW_DIR  # Set group to www-data
+sudo chmod -R 755 $CCTV_WWW_DIR
+
+# Set ownership to www-data for the footage directory
+echo "Setting permissions for $CCTV_FOOTAGE_DIR ..."
+sudo chown -R $USER:www-data $CCTV_FOOTAGE_DIR  # Set group to www-data
+sudo chmod -R 755 $CCTV_FOOTAGE_DIR
+
+# Set the new nginx conf
+echo "Setting new NGINX conf ..."
+sudo cp $CUSTOM_NGINX_CONF_PATH $NGINX_DEFAULT_CONF_PATH
+
+echo "Checking the new conf file ..."
+if sudo nginx -t; then
+    # If the configuration test is successful
+    echo "Configuration test passed."
+
+    # Restart NGINX service
+    echo "Restarting NGINX systemctl service ..."
+    if sudo systemctl restart nginx; then
+        echo "NGINX successfully restarted."
+    else
+        echo "Failed to restart NGINX. Please check the logs."
+    fi
+else
+    # If the configuration test fails
+    echo "Error: NGINX configuration test failed. Please check your configuration."
+    exit 1
+fi
 
 echo "Deployment complete!"
 
