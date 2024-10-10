@@ -1,4 +1,4 @@
-export function getVideoList(directoryUrl) {
+export function getVideoList(directoryUrl, extension = ".mp4") {
     return new Promise((resolve, reject) => {
         fetch(directoryUrl)
             .then(response => {
@@ -19,7 +19,7 @@ export function getVideoList(directoryUrl) {
                 // Loop through each anchor tag and get the href value if it ends with .mkv
                 links.forEach(link => {
                     const fileName = link.getAttribute('href');
-                    if (fileName && fileName.endsWith('.mkv')) {
+                    if (fileName && fileName.endsWith(extension)) {
                         videoList.push(fileName);
                     }
                 });

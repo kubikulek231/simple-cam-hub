@@ -1,0 +1,43 @@
+.controls-container {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+}
+
+.controls-container div {
+    transition: width 0.3s ease;
+}
+
+.progress-container {
+    position: relative;
+    width: 100%;
+    height: 5px;
+    background-color: gray;
+    cursor: pointer;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: red;
+    container-type: inline-size;
+}
+
+.position-circle {
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background-color: white;
+    transform: translateY(-50%) translateY(+2.5px) translateX(calc(100cqw - 100%));
+}
+
+.video-timestamp {
+    color: white;
+    text-align: center;
+}

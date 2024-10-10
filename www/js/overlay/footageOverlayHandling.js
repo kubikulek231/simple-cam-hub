@@ -1,6 +1,6 @@
 import { loadedCameraConfList } from "../json-loaders/camConfLoader.js";
 import { createStoredVideo } from "../factory/videoFactory.js";
-import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../footageLoading.js";
+import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../json-loaders/camFootageLoading.js";
 
 export function hideFootageOverlay() {
     const footageOverlayElements = document.getElementsByClassName("footage-overlay");
