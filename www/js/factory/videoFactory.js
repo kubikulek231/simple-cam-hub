@@ -16,6 +16,10 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     const controls = document.createElement('div');
     controls.classList.add('controls-container');
     
+    // Create progress bar wrapper
+    const progressBarWrapper = document.createElement('div');
+    progressBarWrapper.className = 'progress-wrapper';
+
     // Create progress bar container
     const progressBarContainer = document.createElement('div');
     progressBarContainer.className = 'progress-container';
@@ -25,21 +29,19 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     progressBar.className = 'progress-bar';
     progressBar.style.width = '0%';  // Initial width (starts empty)
     progressBarContainer.appendChild(progressBar);
-
     // Create a circle to highlight the current position
     const currentPositionCircle = document.createElement('div');
     currentPositionCircle.classList.add('position-circle');
     progressBar.appendChild(currentPositionCircle);
 
+    progressBarWrapper.appendChild(progressBarContainer)
+
     // Append the progress bar to the controls
-    controls.appendChild(progressBarContainer);
+    controls.appendChild(progressBarWrapper);
 
     // Create a timestamp display
     const timestampDisplay = document.createElement('div');
     timestampDisplay.classList.add('video-timestamp');
-    timestampDisplay.style.color = 'white'; // Text color
-    timestampDisplay.style.textAlign = 'center'; // Center the text
-    timestampDisplay.style.marginTop = '5px'; // Add some spacing
     controls.appendChild(timestampDisplay); // Append to controls
 
     // Add event listener to update the progress bar, circle position, and timestamp as the video plays
@@ -76,9 +78,9 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
 
     // Create a button container and append STOP and RESUME buttons
     const buttonContainer = document.createElement('div');
-    buttonContainer.style.textAlign = 'center';  // Center the buttons
     buttonContainer.appendChild(stopButton);
     buttonContainer.appendChild(resumeButton);
+    controls.appendChild(buttonContainer);
 
     // Optional: Play video when metadata is loaded
     video.addEventListener('loadedmetadata', function () {
@@ -90,7 +92,7 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     videoContainer.style.position = 'relative';
     videoContainer.appendChild(video);
     videoContainer.appendChild(controls);
-    videoContainer.appendChild(buttonContainer);  // Append the button container below the video controls
+
 
     // Return the container, which includes the video, custom controls, and buttons
     return videoContainer;
