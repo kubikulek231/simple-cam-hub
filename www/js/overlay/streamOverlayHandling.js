@@ -1,5 +1,5 @@
 import { createStreamedVideo } from "../factory/videoFactory.js";
-import { loadedCameraConfList } from "../json-loaders/camConfLoader.js"
+import { loadedCameraConfList } from "../loaders/camConfLoader.js"
 import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 
 
@@ -21,8 +21,11 @@ export function showStreamOverlay(cameraConf) {
         element.removeAttribute('hidden'); // Show the element
     });
     const videoContainerElement = document.getElementById("streamOverlayVideoContainer");
-    descriptorElement.textContent = "Přehrávání živého videa z kamery: " + cameraConf.title;
-    videoContainerElement.appendChild(createStreamedVideo(cameraConf.source));
+    while (videoContainerElement.firstChild) {
+        videoContainerElement.removeChild(videoContainerElement.firstChild);
+    }
+    descriptorElement.textContent = 'Přehrávání živého videa z kamery: "' + cameraConf.title + '"';
+    videoContainerElement.appendChild(createStreamedVideo(cameraConf.source, false));
 }
 
 export function handleStreamOverlay() {

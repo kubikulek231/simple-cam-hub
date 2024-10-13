@@ -1,5 +1,5 @@
 import { handleStreamContainers } from "./streamContainerHandling.js";
-import { loadCameraConf } from "./json-loaders/camConfLoader.js";
+import { loadCameraConf } from "./loaders/camConfLoader.js";
 import { handleStreamOverlay } from "./overlay/streamOverlayHandling.js";
 import { handleFootageOverlay } from "./overlay/footageOverlayHandling.js";
 import { handleBrowserOverlay } from "./overlay/browserOverlayHandling.js";

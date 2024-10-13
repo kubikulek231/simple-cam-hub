@@ -1,17 +1,23 @@
-#footageOverlayContentWrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: start;
-    gap: 5px;
+#footageOverlayContainer {
     width: 100%;
-    padding-top: 10px;
+    height: 100%;
 }
 
 #footageOverlayContentWrapper {
     position: fixed;
 
-    width: 95%;
-    height: 95%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 5px;
+
+    padding-top: 10px;
+    min-height: 200px;
+    min-width: 200px;
+
+    width: fit-content;
+    height: 98%;
 
     /* Centering */
     top: 0;
@@ -19,32 +25,84 @@
     right: 0;
     bottom: 0;
     margin: auto;
-    z-index: 10;
+    z-index: 11;
 
-    background-color: rgb(138, 138, 138);
+    background-color: black;
 }
 
-#footageOverlayContainer #footageOverlayHeader {
-    height: 5%;
+#footageOverlayHeader {
+    display: flex;
+    flex-direction: row;
+    color: white;
+    width: 90%;
+}
+
+#footageOverlayTitle {
+    font-weight: 800;
+    font-size: 30px;
 }
 
 #footageOverlayButtonContainer {
-    min-height: 40px;
-    display: flex;
-    flex-direction: row;
+    min-height: fit-content;
+    min-width: fit-content;
     gap: 10px;
-    align-items: center;
-    margin: auto;
+}
+
+#footageOverlayButtonContainer #exitFootageOverlayButton {
+    width: fit-content;
 }
 
 #footageOverlayVideoContainer {
+    display: flex;
+    flex-direction: column;
+    width: auto;         
+    height: auto;        
+    width: fit-content;      
+    height: 95%;     
+    box-sizing: border-box; 
+    overflow: hidden;  
+    align-items: center;  
+}
+
+#footageOverlayDescriptorContainer {
+    display: flex;
+    flex-direction: row;
+    color: white;
+    font-size: 20px;
+    width: fit-content;
+    align-items: flex-start;
+    gap: 15px;
     width: 90%;
+}
+
+#footageOverlayVideoContainer .video-wrapper {
     height: 90%;
-    /* Centering */
-    margin: auto;
+    align-self: center;
+    width: fit-content;
 }
 
-#footageOverlayButtonContainer {
-    min-height: 30px;
+#footageOverlayVideoContainer video {
+    width: fit-content;
 }
 
+#footageOverlayVideoContainer .resume-stop-time-container {
+    width: 90%;
+}
+
+#footageOverlayContent {
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#footageOverlayContainer .blocker-overlay {
+    z-index: 10;
+}
+
+
+
+/* #footageOverlayDescriptorContainer > div {
+} */

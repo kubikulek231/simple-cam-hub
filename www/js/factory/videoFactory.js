@@ -40,9 +40,13 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     controls.appendChild(progressBarWrapper);
 
     // Create a timestamp display
+    const timestampContainer = document.createElement('div');
+    timestampContainer.classList.add('video-timestamp-container');
+    const timestampHeader = document.createElement('div');
+    timestampHeader.classList.add('video-timestamp-header');
+    timestampHeader.textContent = "Přehráno: "
     const timestampDisplay = document.createElement('div');
-    timestampDisplay.classList.add('video-timestamp');
-    controls.appendChild(timestampDisplay); // Append to controls
+    timestampDisplay.classList.add('video-timestamp-content');
 
     // Add event listener to update the progress bar, circle position, and timestamp as the video plays
     video.addEventListener('timeupdate', function () {
@@ -65,22 +69,46 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
 
     // Create STOP and RESUME buttons
     const stopButton = document.createElement('button');
-    stopButton.textContent = 'STOP';
+    stopButton.textContent = 'ZASTAVIT';
+    stopButton.classList.add("button-stop");
     stopButton.addEventListener('click', function () {
         video.pause(); // Pauses the video
     });
 
     const resumeButton = document.createElement('button');
-    resumeButton.textContent = 'RESUME';
+    resumeButton.textContent = 'POKRAČOVAT';
+    resumeButton.classList.add("button-resume");
     resumeButton.addEventListener('click', function () {
         video.play(); // Resumes the video
     });
 
+    const downloadButton = document.createElement('button');
+    downloadButton.textContent = 'ULOŽIT DO POČÍTAČE';
+    downloadButton.classList.add("button-download");
+    // Add an event listener to handle the download
+    downloadButton.addEventListener('click', function () {
+        const videoUrl = videoSource;  // Replace with your video URL
+        downloadVideo(videoUrl);
+    });
+
+    const flexSpacer = document.createElement("div");
+    flexSpacer.classList.add("flex-spacer");
+    
+    // Append the button to the body or another container
+    document.body.appendChild(downloadButton);
+
     // Create a button container and append STOP and RESUME buttons
     const buttonContainer = document.createElement('div');
+    buttonContainer.classList.add("resume-stop-time-container");
     buttonContainer.appendChild(stopButton);
     buttonContainer.appendChild(resumeButton);
+    timestampContainer.appendChild(timestampHeader);
+    timestampContainer.appendChild(timestampDisplay); // Append to controls
+    buttonContainer.appendChild(timestampContainer);
+    buttonContainer.appendChild(flexSpacer);
+    buttonContainer.appendChild(downloadButton);
     controls.appendChild(buttonContainer);
+    
 
     // Optional: Play video when metadata is loaded
     video.addEventListener('loadedmetadata', function () {
@@ -89,14 +117,38 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
 
     // Wrap everything in a container
     const videoContainer = document.createElement('div');
-    videoContainer.style.position = 'relative';
-    videoContainer.appendChild(video);
+    videoContainer.classList.add("video-container");
+    const videoWrapper = document.createElement('div');
+    videoWrapper.classList.add("video-wrapper");
+    videoWrapper.appendChild(video);
+    videoContainer.appendChild(videoWrapper);
     videoContainer.appendChild(controls);
-
 
     // Return the container, which includes the video, custom controls, and buttons
     return videoContainer;
 }
+
+// Download video function
+function downloadVideo(videoUrl) {
+    // Create an anchor element
+    const a = document.createElement('a');
+    
+    // Set the href to the video URL
+    a.href = videoUrl;
+
+    // Set the download attribute without specifying a custom filename
+    a.download = '';  // Empty string will use the file's original name
+
+    // Append the anchor to the body
+    document.body.appendChild(a);
+
+    // Programmatically click the anchor to trigger the download
+    a.click();
+
+    // Remove the anchor from the document
+    document.body.removeChild(a);
+}
+
 
 // Function to format time in HH:MM:SS
 function formatTime(seconds) {
@@ -110,6 +162,10 @@ export function createStreamedVideo(videoSource, controls = true, videoType = 'a
     const video = document.createElement('video');
     video.controls = controls;  // Enable browser default controls
     video.muted = true;
+
+    const videoWrapper = document.createElement('div');
+    videoWrapper.classList.add("video-wrapper");
+    videoWrapper.appendChild(video);
 
     // Check if HLS is supported by the browser via Hls.js
     if (Hls.isSupported()) {
@@ -129,5 +185,5 @@ export function createStreamedVideo(videoSource, controls = true, videoType = 'a
         console.error('HLS is not supported in this browser.');
     }
 
-    return video;
+    return videoWrapper;
 }

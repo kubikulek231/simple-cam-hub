@@ -1,17 +1,16 @@
 #streamOverlayContentWrapper {
     display: flex;
     flex-direction: column;
-    align-items: start;
-    gap: 5px;
+    align-items: center;
+    gap: 7px;
     width: 100%;
-    padding-top: 10px;
-}
+    padding: 7px;
+    padding-top: 15px;
 
-#streamOverlayContentWrapper {
     position: fixed;
 
-    width: 95%;
-    height: 95%;
+    width: fit-content;
+    height: 96%;
 
     /* Centering */
     top: 0;
@@ -19,39 +18,56 @@
     right: 0;
     bottom: 0;
     margin: auto;
-    z-index: 10;
+    z-index: 11;
 
-    background-color: rgb(138, 138, 138);
+    background-color: black;
 }
 
-#streamOverlayContainer #streamOverlayHeader {
-    height: 5%;
+#streamOverlayHeader {
+    font-size: 30px;
+    width: 90%;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+}
+
+#streamOverlayTitle {
+    width: fit-content;
+}
+
+#streamOverlayDescriptor {
+    flex: 0 1 auto;
+}
+
+#streamOverlayContainer {
+    flex: 1 1 auto;
 }
 
 #streamOverlayContainer video {
-    position: relative;
-    height: 100%;
-    width: 100%;
-    margin: auto;
+    width: fit-content;
 }
 
 #streamOverlayButtonContainer {
-    min-height: 40px;
+    min-height: 55px;
     display: flex;
     flex-direction: row;
     gap: 10px;
     align-items: center;
     margin: auto;
+    width: fit-content;
+}
+
+#streamOverlayDescriptorContainer {
+    display: flex;
+    flex-direction: row;
+    width: 90%;
 }
 
 #streamOverlayVideoContainer {
-    width: 90%;
-    height: 90%;
+    width: fit-content;
     /* Centering */
-    margin: auto;
+    flex: 1 1 auto;
+    height: 85%;
+    align-self: center;
+    width: fit-content;
 }
-
-#streamOverlayButtonContainer {
-    min-height: 30px;
-}
-

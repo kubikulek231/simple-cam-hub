@@ -1,21 +1,11 @@
-.controls-container {
-    position: relative;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 5px;
-}
-
 .progress-wrapper {
     position: relative;
-    bottom: 0;
-    left: 0;
-    width: 100%;
+    width: 98%;
     padding: 5px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgb(255, 255, 255);
+    border-radius: 2px;
+    align-self: center;
+    height: 9px;
 }
 
 
@@ -26,7 +16,7 @@
 .progress-container {
     position: relative;
     width: 100%;
-    height: 5px;
+    height: 8px;
     background-color: gray;
     cursor: pointer;
 }
@@ -35,6 +25,7 @@
     height: 100%;
     background-color: red;
     container-type: inline-size;
+    border-radius: 2px;
 }
 
 .position-circle {
@@ -42,11 +33,85 @@
     width: 13px;
     height: 13px;
     border-radius: 50%;
-    background-color: white;
-    transform: translateY(-50%) translateY(+2.5px) translateX(calc(100cqw - 100%));
+    background-color: red;
+    transform: translateX(5%) translateY(-50%) translateY(+4px) translateX(calc(100cqw - 100%));
 }
 
-.video-timestamp {
+.video-timestamp-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    align-content: start;
+    gap: 10px;
+}
+
+.video-timestamp-content {
     color: white;
     text-align: center;
+    font-size: 20px; 
+}
+
+.video-timestamp-header {
+    color: white;
+    text-align: center;
+    font-size: 20px; 
+}
+
+
+.resume-stop-time-container {
+    padding-top: 5px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.factory-created-stored-video {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    margin: auto;
+}
+
+.video-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    width: fit-content;
+    box-sizing: border-box;
+}
+
+.video-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+video {
+    display: block;
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+}
+
+.controls-container {
+    position: relative;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    min-height: fit-content;
+    background-color: rgba(0, 0, 0, 0.4);
+    flex: 1 1 auto;  
+    box-sizing: border-box;
+    gap: 5px;
 }

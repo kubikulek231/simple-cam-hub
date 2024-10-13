@@ -10,28 +10,39 @@
 </head>
 <body>
     <div class="container">
-        <h1>Camera Streams</h1>
+        <div id="streamsTitle"> Prohlížeč kamerových záznamů</div>
         <div id="videoContainer"></div>
     </div>
 
     <div id="streamOverlayContainer" class="stream-overlay" hidden>
         <div class="blocker-overlay stream-overlay" hidden></div>
         <div id="streamOverlayContentWrapper" class="stream-overlay">
-            <div id="streamOverlayHeader" class="stream-overlay" hidden>Zvětšený režim</div>
-            <div id="streamOverlayDescriptor" class="stream-overlay" hidden>Přehrávání živého videa z:</div>
-            <div id="streamOverlayVideoContainer" class="stream-overlay" hidden></div>
-            <div id="streamOverlayButtonContainer" class="stream-overlay" hidden>
-                <button id="exitStreamOverlayButton" class="button">ZAVŘÍT ZVĚTŠENÝ REŽIM</button>
+            <div id="streamOverlayHeader" class="stream-overlay" hidden>
+                <div id="streamOverlayTitle" class="stream-overlay" hidden>Zvětšený režim</div>
+                <div class="flex-spacer"></div>
+                <button id="exitStreamOverlayButton" class="button button-close">ZAVŘÍT ZVĚTŠENÝ REŽIM</button>
             </div>
+            <div id="streamOverlayDescriptorContainer" class="stream-overlay" hidden>
+                <div id="streamOverlayDescriptor" class="stream-overlay" hidden>Přehrávání živého videa z:</div>
+                <div class="flex-spacer"></div>
+            </div>
+            <div id="streamOverlayVideoContainer" class="stream-overlay" hidden></div>
         </div>
     </div>
 
     <div id="browserOverlayContainer" class="browser-overlay" hidden>
         <div class="blocker-overlay browser-overlay" hidden></div>
         <div id="browserOverlayContentWrapper" class="browser-overlay">
-            <div id="browserOverlayHeader" class="browser-overlay" hidden>Prohlížeč záznamů</div>
-            <div id="browserOverlayDescriptor" class="browser-overlay" hidden>-</div>
-            <div id="browserOverlayDateTime" class="browser-overlay" hidden>-</div>
+            <div id="browserOverlayHeader" class="browser-overlay" hidden>
+                <div id="browserOverlayTitle" class="browser-overlay" hidden>Prohlížeč záznamů</div>
+                <div class="flex-spacer"></div>
+                <button id="exitBrowserOverlayButton" class="button button-close">ZAVŘÍT PROHLÍŽEČ ZÁZNAMŮ</button>
+            </div>
+            <div id="browserOverlayDescriptorContainer" class="browser-overlay" hidden>
+                <div id="browserOverlayDescriptor" class="browser-overlay" hidden></div>
+                <div class="flex-spacer"></div>
+                <div id="browserOverlayDateTime" class="browser-overlay" hidden></div>
+            </div>
             <div id="browserOverlayVideoContainer" class="browser-overlay" hidden>
                 <table id="browserTable">
                     <thead>
@@ -54,24 +65,28 @@
                 <button id="browserPagePrev" class="button" disabled>PŘEDCHOZÍ STRANA</button>
                 <button id="browserPageNext" class="button">DALŠÍ STRANA</button>
             </div>
-            <div id="browserOverlayButtonContainer" class="browser-overlay" hidden>
-                <button id="exitBrowserOverlayButton" class="button">ZAVŘÍT PROHLÍŽEČ ZÁZNAMŮ</button>
-            </div>
         </div>
     </div>
 
     <div id="footageOverlayContainer" class="footage-overlay" hidden>
         <div class="blocker-overlay footage-overlay" hidden></div>
         <div id="footageOverlayContentWrapper" class="footage-overlay">
-            <div id="footageOverlayHeader" class="footage-overlay" hidden>Přehrávač záznamů</div>
+            <div id="footageOverlayContent" class="footage-overlay">
+                <div id="footageOverlayHeader" class="footage-overlay" hidden>
+                    <div id="footageOverlayTitle" class="footage-overlay" hidden>Přehrávač záznamů</div>
+                    <div class="flex-spacer footage-overlay" hidden></div>
+                    <div id="footageOverlayButtonContainer" class="footage-overlay" hidden>
+                        <button id="exitFootageOverlayButton" class="button button-close">ZAVŘÍT PŘEHRÁVAČ ZÁZNAMŮ</button>
+                    </div>
+                </div>
+            
             <div id="footageOverlayDescriptorContainer" class="footage-overlay" hidden>
                 <div id="footageOverlayDescriptorTitle" class="footage-overlay" hidden></div>
+                <div class="flex-spacer footage-overlay" hidden></div>
                 <div id="footageOverlayDescriptorDate" class="footage-overlay" hidden></div>
                 <div id="footageOverlayDescriptorTime" class="footage-overlay" hidden></div>
             </div>
             <div id="footageOverlayVideoContainer" class="footage-overlay" hidden></div>
-            <div id="footageOverlayButtonContainer" class="footage-overlay" hidden>
-                <button id="exitFootageOverlayButton" class="button">ZAVŘÍT PŘEHRÁVAČ ZÁZNAMŮ</button>
             </div>
         </div>
     </div>

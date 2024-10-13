@@ -1,13 +1,21 @@
 html, body {
     height: 100%; /* Ensure html and body take up full height */
     margin: 0; /* Remove default margins */
+    font-family: Calibri;    
+    font-weight: 600;
+    font-size: 20px;
+    background-color: rgb(0, 74, 74);
+    color: white;
 }
 
 button {
-    min-height: 30px;
+    font-family: Calibri;    
+    font-weight: 600;
+    min-height: 35px;
     max-height: 90%;
     font-size: 20px;
-    border-color: black;
+    border-color: lightgray;
+    border-width: 2px;
     background-color: #004080;
     color: white;
     padding-left: 10px;
@@ -15,7 +23,30 @@ button {
     border-radius: 5px;
 }
 
-video {
-    height: 100%;
-    width: 100%;
+.button-open-browser-overlay {
+    background-color: rgb(100, 77, 0);
+}
+
+.button-close{
+    background-color: rgb(100, 0, 0);
+}
+
+.button-stop{
+    background-color: rgb(100, 0, 0);
+}
+
+.button-resume{
+    background-color: rgb(1, 78, 0);
+}
+
+.button-play{
+    background-color: rgb(1, 78, 0);
+}
+
+.button-download{
+    background-color: rgb(100, 77, 0);
+}
+
+.flex-spacer {
+    flex-grow: 1;
 }

@@ -1,5 +1,5 @@
-import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../json-loaders/camFootageLoading.js";
-import { loadedCameraConfList } from "../json-loaders/camConfLoader.js";
+import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
+import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { showFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 

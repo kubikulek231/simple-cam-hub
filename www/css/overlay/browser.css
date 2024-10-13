@@ -1,13 +1,11 @@
 #browserOverlayContentWrapper {
     display: flex;
     flex-direction: column;
-    align-items: start;
+    align-items: center;
     gap: 5px;
     width: 100%;
     padding-top: 10px;
-}
 
-#browserOverlayContentWrapper {
     position: fixed;
 
     width: 95%;
@@ -24,17 +22,20 @@
     background-color: rgb(138, 138, 138);
 }
 
-#browserOverlayContainer #browserOverlayHeader {
-    height: 5%;
-}
-
-#browserOverlayButtonContainer {
-    min-height: 40px;
+#browserOverlayHeader {
+    width: 90%;
     display: flex;
     flex-direction: row;
-    gap: 10px;
-    align-items: center;
-    margin: auto;
+}
+
+#browserOverlayTitle {
+    font-size: 30px;
+}
+
+#browserOverlayDescriptorContainer {
+    display: flex;
+    flex-direction: row;
+    width: 90%;
 }
 
 #browserOverlayVideoContainer {
@@ -42,9 +43,5 @@
     height: 90%;
     /* Centering */
     margin: auto;
-}
-
-#browserOverlayButtonContainer {
-    min-height: 30px;
 }
 

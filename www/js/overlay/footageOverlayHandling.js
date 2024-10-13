@@ -1,6 +1,6 @@
-import { loadedCameraConfList } from "../json-loaders/camConfLoader.js";
+import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createStoredVideo } from "../factory/videoFactory.js";
-import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../json-loaders/camFootageLoading.js";
+import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 
 export function hideFootageOverlay() {
     const footageOverlayElements = document.getElementsByClassName("footage-overlay");
@@ -9,8 +9,9 @@ export function hideFootageOverlay() {
         element.setAttribute('hidden', 'true'); // Hide the element
     });
     const videoContainerElement = document.getElementById("footageOverlayVideoContainer");
-    const videoElement = videoContainerElement.getElementsByTagName("video")[0];
-    videoElement.remove();
+    while (videoContainerElement.firstChild) {
+        videoContainerElement.removeChild(videoContainerElement.firstChild);
+    }
 }
 
 export function showFootageOverlay(cameraConfItem, videoPath) {
@@ -30,7 +31,7 @@ export function showFootageOverlay(cameraConfItem, videoPath) {
     const camDescriptionDate = document.getElementById("footageOverlayDescriptorDate");
     const camDescriptionTime = document.getElementById("footageOverlayDescriptorTime");
     
-    camDescriptionTitle.textContent = "Záznam z kamery: " + String(cameraConfItem.title);
+    camDescriptionTitle.textContent = 'Název kamery: "' + String(cameraConfItem.title) + '"';
     camDescriptionDate.textContent = "Datum: " + dayName + " " + day + ". " + monthName + " " + year;
     camDescriptionTime.textContent =  "Čas: " + time;
     
@@ -38,8 +39,11 @@ export function showFootageOverlay(cameraConfItem, videoPath) {
         element.removeAttribute('hidden'); // Show the element
     });
     const targetVideoPath = cameraConfItem.footageDirectory + "/" + videoPath;
-    const videoElement = createStoredVideo(targetVideoPath, "video/webm");
     const videoContainer = document.getElementById("footageOverlayVideoContainer");
+    const videoElement = createStoredVideo(targetVideoPath, "video/webm");
+    while (videoContainer.firstChild) {
+        videoContainer.removeChild(videoContainer.firstChild);
+    }
     videoContainer.appendChild(videoElement);
 }
 

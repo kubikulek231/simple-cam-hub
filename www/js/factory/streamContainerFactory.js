@@ -8,11 +8,11 @@ function createStreamContainerControls() {
 
     const button1 = document.createElement('button'); // Create a button element
     button1.classList = 'button button-open-stream-overlay'; // Set class names
-    button1.textContent = 'ZVĚTŠIT'; // Set text content
+    button1.textContent = 'ZVĚTŠIT🔎'; // Set text content
 
     const button2 = document.createElement('button'); // Create another button element
     button2.classList = 'button button-open-browser-overlay'; // Set class names
-    button2.textContent = 'PROJÍT ZÁZNAMY'; // Set text content
+    button2.textContent = 'PROJÍT ZÁZNAMY📁'; // Set text content
 
     // Append buttons to the controls container
     controlsContainer.appendChild(button1);

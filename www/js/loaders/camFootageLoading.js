@@ -1,4 +1,4 @@
-export function getVideoList(directoryUrl, extension = ".mp4") {
+export function getVideoList(directoryUrl, extensions = [".mp4", ".mkv"]) {
     return new Promise((resolve, reject) => {
         fetch(directoryUrl)
             .then(response => {
@@ -16,11 +16,15 @@ export function getVideoList(directoryUrl, extension = ".mp4") {
                 const links = doc.querySelectorAll('a');
                 const videoList = [];
 
-                // Loop through each anchor tag and get the href value if it ends with .mkv
+                // Loop through each anchor tag and get the href value if it ends with one of the allowed extensions
                 links.forEach(link => {
                     const fileName = link.getAttribute('href');
-                    if (fileName && fileName.endsWith(extension)) {
-                        videoList.push(fileName);
+                    if (fileName) {
+                        // Check if the file ends with any of the extensions in the array
+                        const isValidExtension = extensions.some(ext => fileName.endsWith(ext));
+                        if (isValidExtension) {
+                            videoList.push(fileName);
+                        }
                     }
                 });
 

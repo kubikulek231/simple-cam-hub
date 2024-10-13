@@ -1,5 +1,5 @@
 import { createStreamContainer } from "./factory/streamContainerFactory.js";
-import { loadedCameraConfList } from "./json-loaders/camConfLoader.js";
+import { loadedCameraConfList } from "./loaders/camConfLoader.js";
 
 
 function createStreamContainersFromConf() {
