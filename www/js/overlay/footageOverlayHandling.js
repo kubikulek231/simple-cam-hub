@@ -25,7 +25,8 @@ export function showFootageOverlay(cameraConfItem, videoPath) {
     var dayName = dayMonthNames[0];
     var day = splitVideoName.day;
     var monthName = dayMonthNames[1];
-    var time = String(splitVideoName.hour) + ":" + String(splitVideoName.minute);
+    const minutes = splitVideoName.minute.toString().padStart(2, '0'); 
+    var time = String(splitVideoName.hour) + ":" + String(minutes);
 
     const camDescriptionTitle = document.getElementById("footageOverlayDescriptorTitle");
     const camDescriptionDate = document.getElementById("footageOverlayDescriptorDate");

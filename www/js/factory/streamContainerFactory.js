@@ -14,8 +14,12 @@ function createStreamContainerControls() {
     button2.classList = 'button button-open-browser-overlay'; // Set class names
     button2.textContent = 'PROJÍT ZÁZNAMY📁'; // Set text content
 
+    const flexSpacer = document.createElement("div");
+    flexSpacer.classList.add("flex-spacer");
+
     // Append buttons to the controls container
     controlsContainer.appendChild(button1);
+    // controlsContainer.appendChild(flexSpacer);
     controlsContainer.appendChild(button2);
     return controlsContainer;
 }

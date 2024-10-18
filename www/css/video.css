@@ -100,6 +100,25 @@ video {
     object-fit: contain;
 }
 
+.video-finished-overlay {
+    position: absolute;
+    pointer-events: none;
+    background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent background */
+    font-size: 50px;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+}
+
+.video-finished-header {
+    color: white;
+    width: fit-content;
+    height: fit-content;
+    margin: auto;
+}
+
+
 .controls-container {
     position: relative;
     bottom: 0;

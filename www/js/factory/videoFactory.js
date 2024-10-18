@@ -48,6 +48,77 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     const timestampDisplay = document.createElement('div');
     timestampDisplay.classList.add('video-timestamp-content');
 
+    // Create STOP button
+    const stopButton = document.createElement('button');
+    stopButton.textContent = '◼ ZASTAVIT';
+    stopButton.classList.add("button-stop");
+    stopButton.addEventListener('click', function () {
+        video.pause(); // Pauses the video
+        stopButton.disabled = true;   // Disable the stop button
+        resumeButton.disabled = false; // Enable the resume button
+    });
+
+    // Get reference to the overlay element
+    const videoFinishedOverlay = document.createElement('div');
+    videoFinishedOverlay.classList.add("video-finished-overlay");
+    const videoFinishedHeader = document.createElement('div');
+    videoFinishedHeader.classList.add("video-finished-header");
+    videoFinishedHeader.textContent = "Video přehráno ...";
+    videoFinishedOverlay.appendChild(videoFinishedHeader);
+    videoFinishedOverlay.style.display = 'none'; // Hide it initially
+
+    // Create RESUME button (will later change to PLAY AGAIN when video ends)
+    const resumeButton = document.createElement('button');
+    resumeButton.textContent = '▶ POKRAČOVAT';
+    resumeButton.classList.add("button-resume");
+    resumeButton.disabled = true; // Initially disabled until the video is paused
+    resumeButton.addEventListener('click', function () {
+        if (video.ended) {
+            // If video has ended, restart the video
+            video.currentTime = 0; // Reset video to the beginning
+            video.play(); // Play video from the beginning
+        } else {
+            // Resume video if not ended
+            video.play(); // Resumes the video
+        }
+        resumeButton.disabled = true; // Disable the resume button
+        stopButton.disabled = false;  // Enable the stop button
+    });
+
+    // Listen for the 'ended' event on the video element
+    video.addEventListener('ended', function () {
+        // When the video ends, change resume button to "Play Again"
+        stopButton.disabled = true;   // Disable stop button
+        resumeButton.textContent = '⟳ PŘEHRÁT ZNOVU'; // Change button text to "Play Again"
+        resumeButton.disabled = false; // Enable resume button (now acting as play again button)
+        videoFinishedOverlay.style.display = 'block'; // Show overlay when video finishes
+    });
+
+    // Hide the overlay when the video starts playing
+    video.addEventListener('play', function () {
+        videoFinishedOverlay.style.display = 'none'; // Hide overlay when video plays
+        stopButton.disabled = false; // Enable stop button when playing
+        resumeButton.disabled = true; // Disable resume button when playing
+    });
+
+    // Optional: Play video when metadata is loaded
+    video.addEventListener('loadedmetadata', function () {
+        video.play();
+    });
+
+    // Add download button logic
+    const downloadButton = document.createElement('button');
+    downloadButton.textContent = '💾 ULOŽIT DO POČÍTAČE';
+    downloadButton.classList.add("button-download");
+    // Add an event listener to handle the download
+    downloadButton.addEventListener('click', function () {
+        const videoUrl = videoSource;  // Replace with your video URL
+        downloadVideo(videoUrl);
+    });
+
+    // Variable to track if the video was playing before seeking
+    let wasPlayingBeforeSeek = false;
+
     // Add event listener to update the progress bar, circle position, and timestamp as the video plays
     video.addEventListener('timeupdate', function () {
         const percent = (video.currentTime / video.duration) * 100;
@@ -64,38 +135,27 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
         const rect = progressBarContainer.getBoundingClientRect(); // Get size and position of the bar
         const offsetX = event.clientX - rect.left; // Calculate click position relative to the container
         const newTime = (offsetX / rect.width) * video.duration; // Calculate corresponding time in the video
-        video.currentTime = newTime; // Seek the video to the new time
+        
+        // Check if the video was playing before seeking
+        wasPlayingBeforeSeek = !video.paused;
+
+        // Seek the video to the new time
+        video.currentTime = newTime;
+
+        // If the video was playing, resume playing after the seek
+        if (wasPlayingBeforeSeek) {
+            video.play();
+        } else {
+            // Ensure correct button states if video was paused before seek
+            resumeButton.disabled = false;
+            stopButton.disabled = true;
+            resumeButton.textContent = '▶ POKRAČOVAT';
+        }
     });
 
-    // Create STOP and RESUME buttons
-    const stopButton = document.createElement('button');
-    stopButton.textContent = 'ZASTAVIT';
-    stopButton.classList.add("button-stop");
-    stopButton.addEventListener('click', function () {
-        video.pause(); // Pauses the video
-    });
-
-    const resumeButton = document.createElement('button');
-    resumeButton.textContent = 'POKRAČOVAT';
-    resumeButton.classList.add("button-resume");
-    resumeButton.addEventListener('click', function () {
-        video.play(); // Resumes the video
-    });
-
-    const downloadButton = document.createElement('button');
-    downloadButton.textContent = 'ULOŽIT DO POČÍTAČE';
-    downloadButton.classList.add("button-download");
-    // Add an event listener to handle the download
-    downloadButton.addEventListener('click', function () {
-        const videoUrl = videoSource;  // Replace with your video URL
-        downloadVideo(videoUrl);
-    });
-
+    // Append buttons and controls to the container
     const flexSpacer = document.createElement("div");
     flexSpacer.classList.add("flex-spacer");
-    
-    // Append the button to the body or another container
-    document.body.appendChild(downloadButton);
 
     // Create a button container and append STOP and RESUME buttons
     const buttonContainer = document.createElement('div');
@@ -108,12 +168,6 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     buttonContainer.appendChild(flexSpacer);
     buttonContainer.appendChild(downloadButton);
     controls.appendChild(buttonContainer);
-    
-
-    // Optional: Play video when metadata is loaded
-    video.addEventListener('loadedmetadata', function () {
-        video.play();
-    });
 
     // Wrap everything in a container
     const videoContainer = document.createElement('div');
@@ -121,11 +175,13 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="h
     const videoWrapper = document.createElement('div');
     videoWrapper.classList.add("video-wrapper");
     videoWrapper.appendChild(video);
+    videoWrapper.appendChild(videoFinishedOverlay);
     videoContainer.appendChild(videoWrapper);
     videoContainer.appendChild(controls);
 
     // Return the container, which includes the video, custom controls, and buttons
     return videoContainer;
+
 }
 
 // Download video function

@@ -46,5 +46,8 @@
 
 .stream-controls-container {
     display: flex;
+    width: fit-content;
+    align-items: center;
+    align-content: center;
     gap: 10px;
 }

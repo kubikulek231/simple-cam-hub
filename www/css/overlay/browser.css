@@ -1,15 +1,23 @@
+#browserOverlayContainer {
+    width: 100%;
+    height: 100%;
+}
+
 #browserOverlayContentWrapper {
+    position: fixed;
+
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 5px;
-    width: 100%;
-    padding-top: 10px;
 
-    position: fixed;
+    width: fit-content;
+    height: fit-content;
 
-    width: 95%;
-    height: 95%;
+    max-height: 100%;
+    overflow-y: auto;
+    max-width: none; 
+    overflow-x: auto;
 
     /* Centering */
     top: 0;
@@ -19,13 +27,18 @@
     margin: auto;
     z-index: 10;
 
-    background-color: rgb(138, 138, 138);
+    background-color: rgb(0, 0, 0);
+    padding-top: 10px;
+    padding-left: 7px;
+    padding-right: 7px;
+    min-width: 600px;
+    min-height: 600px;
 }
 
 #browserOverlayHeader {
-    width: 90%;
     display: flex;
     flex-direction: row;
+    width: 90%;
 }
 
 #browserOverlayTitle {
@@ -38,10 +51,58 @@
     width: 90%;
 }
 
-#browserOverlayVideoContainer {
-    width: 90%;
-    height: 90%;
-    /* Centering */
-    margin: auto;
+#browserTable {
+    padding-top: 10px;
+    width: 100%; /* Make the table span 100% of the parent */
+    display: block;
+    max-height: 100%;
+    overflow-y: auto; /* Enable vertical scrolling if the table exceeds the height */
+    overflow-x: auto; /* Enable horizontal scrolling if the table exceeds the width */
+    table-layout: fixed; /* Distribute the cell width equally to fill the parent */
+    border-collapse: collapse; /* Remove gaps between cells */
 }
 
+#browserTable tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.2); /* Apply black background to every second row */
+}
+
+#browserTable tbody tr:nth-child(odd) {
+    background-color: rgba(255, 255, 255, 0.3); /* Optional: Set the background of odd rows to white */
+}
+
+#browserTable td, #browserTable th, #browserTable tr {
+    width: auto; /* Allow the cells to stretch and distribute the available space */
+    padding: 2px; /* Add some padding to make the content inside more readable */
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    text-align: center; /* Align text to the left (optional) */
+    border: 1px solid #ffffff; /* Add a border to the cells (optional) */
+}
+
+#browserTable tbody tr:hover {
+    background-color: rgba(136, 111, 0, 0.5);
+}
+
+#browserTable thead th {
+    padding-bottom: 3px;
+    padding-top: 3px;
+}
+
+#browserTable thead {
+    background-color: rgb(136, 111, 0);
+}
+
+#browserOverlayPageContainer {
+    display: flex;
+    width: 90%;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+#browserPageNum {
+    flex-grow: 1;
+    text-align: center;
+    margin: auto;
+}

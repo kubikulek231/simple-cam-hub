@@ -3,7 +3,7 @@ import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { showFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 
-const ITEMS_PER_PAGE = 15;
+const ITEMS_PER_PAGE = 12;
 const BROWSER_TABLE_ID = "browserTable";
 const BROWSER_PAGE_NUM_ID = "browserPageNum";
 
@@ -25,8 +25,8 @@ function getCurrentDateTimeInWords() {
 
     // Get time components and format them
     const hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0'); // Adds leading zero for minutes
-
+    const minutes = now.getMinutes().toString().padStart(2, '0'); 
+    
     // Construct the final string in words
     const dateInWords = `${dayName}, ${monthName} ${day}, ${year}`;
 
@@ -39,7 +39,8 @@ function setCurrentPageAndTotalHTML() {
     const pageNumElement = document.getElementById(BROWSER_PAGE_NUM_ID);
     pageNumElement.setAttribute("pageNum", currentPageNum);
     pageNumElement.setAttribute("pageTotal", currentPageTotal);
-    pageNumElement.textContent = "Strana " + String(currentPageNum) + " z " + String(currentPageTotal);
+    const pageTotalString = currentPageTotal < 1 ? "1" : String(currentPageTotal);
+    pageNumElement.textContent = "Strana " + String(currentPageNum) + " z " + pageTotalString;
     
     // Disable the next button if on the last page
     const nextButton = document.getElementById(NEXT_BUTTON_ID);
@@ -65,13 +66,17 @@ function goPrevPage() {
     }
 }
 
-async function goNextPage() {
-    // Refresh the currentPageTotal
-    currentPageTotal = await getPageTotal(ITEMS_PER_PAGE);
-    if (currentPageTotal > currentPageNum) {
-        currentPageNum = currentPageNum + 1;
-        setCurrentPageAndTotalHTML(currentPageNum, currentPageTotal);
-    }
+function goNextPage() {
+    // Get the total pages and handle it using `.then()`
+    getPageTotal(ITEMS_PER_PAGE).then(totalPages => {
+        currentPageTotal = totalPages;
+        if (currentPageTotal > currentPageNum) {
+            currentPageNum = currentPageNum + 1;
+            setCurrentPageAndTotalHTML(currentPageNum, currentPageTotal);
+        }
+    }).catch(error => {
+        console.error('Failed to fetch page total:', error);
+    });
 }
 
 function paginateItems(items, itemsPerPage, pageNumber) {
@@ -122,8 +127,8 @@ function createTableEntry(tableId, rowData, videoPath) {
 
     // Create the button element
     const button = document.createElement("button");
-    button.classList.add("button", "browser-play-button");  // Use classList.add to add multiple classes
-    button.textContent = "PŘEHRÁT";
+    button.classList.add("button", "button-play");  // Use classList.add to add multiple classes
+    button.textContent = "▶";
 
     button.addEventListener("click", function() {
         showFootageOverlay(currentCamConf, videoPath);
@@ -160,56 +165,84 @@ export async function showBrowserOverlay(cameraConf, pageNumber = 1) {
 
     try {
         const videoList = await getVideoList(cameraConf.footageDirectory);
-
-        dropTableRows();
-
+    
         // Reverse the video list
         const loadedVideoList = videoList.reverse();
         const videoListPage = paginateItems(loadedVideoList, ITEMS_PER_PAGE, pageNumber);
-
+    
         // Await the total pages
         const totalPages = await getPageTotal(ITEMS_PER_PAGE);
         currentPageTotal = totalPages;
-
+    
         // Set description
         browserOverlayDescriptor.textContent = "Vybraná kamera: " + cameraConf.title;
-
+    
         // Function to update the current date and time every second
         function updateDateTime() {
             browserOverlayDateTime.textContent = "Dnes je: " + getCurrentDateTimeInWords();
         }
-
+    
         // Update the time every second
         setInterval(updateDateTime, 1000); // 1000 ms = 1 second
-
-        // Initial call to display the time immediately without waiting 1 second
-        updateDateTime();
-
+        updateDateTime(); // Initial call to display the time immediately without waiting 1 second
+    
+        // Get the table body element
+        const tableBody = document.querySelector(`#${BROWSER_TABLE_ID} tbody`);
+    
+        // Get current rows in the table
+        const currentRows = Array.from(tableBody.querySelectorAll('tr'));
+        console.log(currentRows);
         // Populate the table with video items
-        Array.from(videoListPage).forEach((videoItem, index) => {
-            index = index + (pageNumber - 1) * ITEMS_PER_PAGE;
+        videoListPage.forEach((videoItem, index) => {
+            const id = index + (pageNumber - 1) * ITEMS_PER_PAGE;
             const splitVideoName = splitVideoFilename(videoItem);
-            const dayMonthNames = getDayAndMonthNames(splitVideoName.day, 
-                                                      splitVideoName.month,
-                                                      splitVideoName.year);
-            createTableEntry(BROWSER_TABLE_ID, [
-                index,
+            const dayMonthNames = getDayAndMonthNames(
+                splitVideoName.day,
+                splitVideoName.month,
+                splitVideoName.year
+            );
+            const hourString = String(splitVideoName.hour);
+            const minuteString = String(splitVideoName.minute).padStart(2, "0");
+    
+            const rowData = [
+                id,
                 splitVideoName.year,
                 dayMonthNames[0],
                 splitVideoName.day + ".",
                 dayMonthNames[1],
-                String(splitVideoName.hour) + ":" + String(splitVideoName.minute),
-
-            ], videoItem);
-
-            
+                hourString + ":" + minuteString,
+            ];
+    
+            if (currentRows[index]) {
+                // If the row exists, update its content
+                updateTableRow(currentRows[index], rowData);
+            } else {
+                // If the row doesn't exist, create a new one
+                createTableEntry(BROWSER_TABLE_ID, rowData, videoItem);
+            }
         });
-
+    
+        // Remove or hide any extra rows if needed
+        if (currentRows.length > videoListPage.length) {
+            for (let i = videoListPage.length; i < currentRows.length; i++) {
+                tableBody.removeChild(currentRows[i]); // Remove extra rows
+            }
+        }
+    
     } catch (error) {
         // Handle any errors that may occur
         console.error('Failed to fetch video list:', error);
     }
 }
+    
+// Function to update the content of an existing table row
+function updateTableRow(row, rowData) {
+    const cells = row.querySelectorAll('td');
+    rowData.forEach((data, i) => {
+        cells[i].textContent = data;
+    });
+}
+
 
 
 export function handleBrowserOverlay() {
@@ -236,7 +269,7 @@ export function handleBrowserOverlay() {
     prevPageButtonElement.addEventListener('click', (event) => {
         goPrevPage();
     });
-    nextPageButtonElement.addEventListener('click', async (event) => {
-        await goNextPage();
+    nextPageButtonElement.addEventListener('click', (event) => {
+        goNextPage();
     });
 }
