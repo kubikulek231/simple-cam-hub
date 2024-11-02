@@ -1,0 +1,13 @@
+[Unit]
+Description=Start FFMPEG cameras HLS script in Screen
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/usr/bin/screen -DmS cam_hls /home/raspberrypi5/simple-cam-hub/scripts/cam_hls.sh
+User=raspberrypi5
+Restart=on-failure
+RestartSec=20
+
+[Install]
+WantedBy=multi-user.target

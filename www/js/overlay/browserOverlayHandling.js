@@ -95,7 +95,9 @@ async function getPageTotal(itemsPerPage) {
     const cameraConf = currentCamConf;
 
     try {
+		console.log(currentCamConf);
         const videoList = await getVideoList(cameraConf.footageDirectory);
+		console.log(videoList);
         // Drop all previous rows
         const totalPageNum = Math.ceil(videoList.length / itemsPerPage); // No need to parseInt
         return totalPageNum; // Return the total number of pages

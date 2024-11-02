@@ -1,11 +1,26 @@
 #!/bin/bash
 LOCAL_DIR=~/simple-cam-hub/www         # Path to your local directory
 TARGET_DIR=/var/www/html                # Target directory on the server
-USER=kubikulek231                 # Your username if using sudo
+USER=raspberrypi5                 # Your username if using sudo
+SCRIPTS_DIR=~/simple-cam-hub/scripts
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_WWW_DIR=/var/www/html/footage
 CUSTOM_NGINX_CONF_PATH=~/simple-cam-hub/nginx.conf
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
+
+# Install custom service
+echo "Installing systemd ffmpeg_download.service ..."
+sudo cp $SCRIPTS_DIR/ffmpeg_download.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl start ffmpeg_download.service
+sudo systemctl enable ffmpeg_download.service
+
+# Install custom service
+echo "Installing systemd ffmpeg_hls.service ..."
+sudo cp $SCRIPTS_DIR/ffmpeg_hls.service /etc/systemd/system
+sudo systemctl daemon-reload
+sudo systemctl start ffmpeg_hls.service
+sudo systemctl enable ffmpeg_hls.service
 
 # Remove the target directory
 echo "Removing $TARGET_DIR ..."

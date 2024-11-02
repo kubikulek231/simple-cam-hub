@@ -1,21 +1,39 @@
-export function createStoredVideo(videoSource, videoType = 'video/mp4; codecs="hev1"') {
+export function createStoredVideo(videoSource, videoType = 'video/ts; codecs="hev1"') {
     // Create video element
     const video = document.createElement('video');
     video.muted = true;  // Set to true if autoplay is needed
+    video.controls = true;  // Enable default controls for testing
 
-    // Disable default controls to implement custom ones
-    video.controls = false;
+// Create a Video.js player instance
+const player = videojs(video, {
+    muted: true,  // Set to true if autoplay is needed
+    controls: true,  // Enable default controls for testing
+    sources: [{
+        src: videoSource,
+        type: videoType
+    }]
+});
 
-    // Set the video source
-    const source = document.createElement('source');
-    source.src = videoSource;
-    source.type = videoType;
-    video.appendChild(source);
+// Listen for error events
+player.on('error', (event) => {
+    const error = player.error();
+    console.error('Video.js error:', error);
+    alert('Failed to load the video. Please check the source or try again later.');
+});
 
-    // Create custom controls container
+// Load the video and attempt to play
+player.ready(() => {
+    player.src({ type: videoType, src: videoSource });
+    player.play().then(() => {
+        console.log('The video has now been loaded and is playing!');
+    }).catch((error) => {
+        console.error('Error playing video:', error);
+    });
+});
+	 // Create custom controls container
     const controls = document.createElement('div');
     controls.classList.add('controls-container');
-    
+	
     // Create progress bar wrapper
     const progressBarWrapper = document.createElement('div');
     progressBarWrapper.className = 'progress-wrapper';
@@ -214,7 +232,7 @@ function formatTime(seconds) {
     return `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
-export function createStreamedVideo(videoSource, controls = true, videoType = 'application/vnd.apple.mpegurl') {
+export function createStreamedVideo(videoSource, controls = true) {
     const video = document.createElement('video');
     video.controls = controls;  // Enable browser default controls
     video.muted = true;
@@ -223,23 +241,34 @@ export function createStreamedVideo(videoSource, controls = true, videoType = 'a
     videoWrapper.classList.add("video-wrapper");
     videoWrapper.appendChild(video);
 
-    // Check if HLS is supported by the browser via Hls.js
-    if (Hls.isSupported()) {
-        const hls = new Hls();
-        hls.loadSource(videoSource);
-        hls.attachMedia(video);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            video.play(); // Start video after manifest is parsed
+    // Initialize Shaka Player without a media element
+    const player = new shaka.Player();
+
+    // Attach the video element to the player
+    player.attach(video).then(() => {
+        // Load the video source
+        return player.load(videoSource);
+    }).then(() => {
+        console.log('The video has now loaded!');
+        video.play().catch(error => {
+            console.error("Error playing video:", error);
         });
-    } else if (video.canPlayType(videoType)) {
-        // If HLS is natively supported (e.g., Safari)
-        video.src = videoSource;
-        video.addEventListener('loadedmetadata', function () {
-            video.play();  // Start video after metadata is loaded
-        });
-    } else {
-        console.error('HLS is not supported in this browser.');
-    }
+    }).catch(onError);  // Handle errors
+
+    // Error handling
+    player.addEventListener('error', onErrorEvent);
 
     return videoWrapper;
+
+    // Error handling function
+    function onErrorEvent(event) {
+        console.error('Error code', event.detail.code, 'object', event.detail);
+    }
+
+    // Generic error handling function
+    function onError(error) {
+        console.error('Error code', error.code, 'object', error);
+    }
 }
+
+

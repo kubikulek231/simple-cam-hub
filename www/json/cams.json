@@ -2,20 +2,20 @@
   "cameras": [
       {
           "id": 0,
-          "title": "Front Entrance",
-          "source": "https://devstreaming-cdn.apple.com/videos/streaming/examples/adv_dv_atmos/main.m3u8",
+          "title": "Stodola",
+          "source": "http://192.168.88.249/cam1/index.m3u8",
           "footageDirectory": "/footage/cam1"
       },
       {
           "id": 1,
-          "title": "Backyard",
-          "source": "https://sample.vodobox.net/skate_phantom_flex_4k/skate_phantom_flex_4k.m3u8",
+          "title": "Cesta",
+          "source": "http://192.168.1.249/cam2/index.m3u8",
           "footageDirectory": "/footage/cam2"
       },
       {
           "id": 2,
-          "title": "Garage",
-          "source": "https://test-streams.mux.dev/tos_ismc/main.m3u8",
+          "title": "Terasa",
+          "source": "http://192.168.1.249/cam3/index.m3u8",
           "footageDirectory": "/footage/cam3"
       }
   ]
