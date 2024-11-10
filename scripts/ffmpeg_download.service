@@ -6,7 +6,8 @@ After=multi-user.target
 Type=idle
 ExecStart=/usr/bin/screen -DmS cam_file_dl /home/raspberrypi5/simple-cam-hub/scripts/cam_file_download.sh
 User=raspberrypi5
-Restart=on-failure
+Restart=always
+RuntimeMaxSec=1d
 RestartSec=20
 
 [Install]
