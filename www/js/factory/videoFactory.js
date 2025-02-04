@@ -236,39 +236,19 @@ export function createStreamedVideo(videoSource, controls = true) {
     const video = document.createElement('video');
     video.controls = controls;  // Enable browser default controls
     video.muted = true;
+    video.src = videoSource;  // Set the video source
+    video.autoplay = true;
+
+    video.addEventListener('error', (event) => {
+        console.error('Error loading video:', event);
+    });
 
     const videoWrapper = document.createElement('div');
     videoWrapper.classList.add("video-wrapper");
     videoWrapper.appendChild(video);
 
-    // Initialize Shaka Player without a media element
-    const player = new shaka.Player();
-
-    // Attach the video element to the player
-    player.attach(video).then(() => {
-        // Load the video source
-        return player.load(videoSource);
-    }).then(() => {
-        console.log('The video has now loaded!');
-        video.play().catch(error => {
-            console.error("Error playing video:", error);
-        });
-    }).catch(onError);  // Handle errors
-
-    // Error handling
-    player.addEventListener('error', onErrorEvent);
-
     return videoWrapper;
-
-    // Error handling function
-    function onErrorEvent(event) {
-        console.error('Error code', event.detail.code, 'object', event.detail);
-    }
-
-    // Generic error handling function
-    function onError(error) {
-        console.error('Error code', error.code, 'object', error);
-    }
 }
+
 
 
