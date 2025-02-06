@@ -1,3 +1,5 @@
+// TODO: fix a bug where the browsing does not get updated when opening different cam footage
+
 import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { showFootageOverlay } from "./footageOverlayHandling.js";
