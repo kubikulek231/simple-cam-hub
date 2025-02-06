@@ -108,39 +108,6 @@ async function getPageTotal(itemsPerPage) {
     }
 }
 
-function createTableEntry(tableId, rowData, videoPath) {
-    // Find the table by its ID
-    const table = document.getElementById(tableId);
-    if (!table) {
-        console.error(`Table with ID '${tableId}' not found.`);
-        return;
-    }
-    const tableBody = table.getElementsByTagName("tbody")[0];
-
-    // Create a new table row
-    const newRow = tableBody.insertRow();
-
-    // Loop through the rowData array and create cells for each value
-    rowData.forEach(data => {
-        const newCell = newRow.insertCell();
-        const textNode = document.createTextNode(data);
-        newCell.appendChild(textNode);
-    });
-
-    // Create the button element
-    const button = document.createElement("button");
-    button.classList.add("button", "button-play");  // Use classList.add to add multiple classes
-    button.textContent = "▶";
-
-    button.addEventListener("click", function() {
-        showFootageOverlay(currentCamConf, videoPath);
-    });
-
-    // Create a new cell and append the button to it
-    const buttonCell = newRow.insertCell();
-    buttonCell.appendChild(button);
-}
-
 export function hideBrowserOverlay() {
     const browserOverlayElements = document.getElementsByClassName("browser-overlay");
 
@@ -217,7 +184,7 @@ export async function showBrowserOverlay(cameraConf, pageNumber = 1) {
     
             if (currentRows[index]) {
                 // If the row exists, update its content
-                updateTableRow(currentRows[index], rowData);
+                updateTableRow(currentRows[index], rowData, videoItem);
             } else {
                 // If the row doesn't exist, create a new one
                 createTableEntry(BROWSER_TABLE_ID, rowData, videoItem);
@@ -236,13 +203,59 @@ export async function showBrowserOverlay(cameraConf, pageNumber = 1) {
         console.error('Failed to fetch video list:', error);
     }
 }
-    
+
 // Function to update the content of an existing table row
-function updateTableRow(row, rowData) {
+function updateTableRow(row, rowData, videoPath) {
     const cells = row.querySelectorAll('td');
+
+    // Update text content of each cell (except the last one, which contains the button)
     rowData.forEach((data, i) => {
         cells[i].textContent = data;
     });
+
+    // Find the button inside the last cell
+    const button = row.querySelector("button");
+    if (button) {
+        // Update the button's event listener with the new videoPath
+        button.replaceWith(button.cloneNode(true));  // Remove existing event listener
+        const newButton = row.querySelector("button");
+        newButton.addEventListener("click", function() {
+            showFootageOverlay(currentCamConf, videoPath);
+        });
+    }
+}
+
+function createTableEntry(tableId, rowData, videoPath) {
+    // Find the table by its ID
+    const table = document.getElementById(tableId);
+    if (!table) {
+        console.error(`Table with ID '${tableId}' not found.`);
+        return;
+    }
+    const tableBody = table.getElementsByTagName("tbody")[0];
+
+    // Create a new table row
+    const newRow = tableBody.insertRow();
+
+    // Loop through the rowData array and create cells for each value
+    rowData.forEach(data => {
+        const newCell = newRow.insertCell();
+        const textNode = document.createTextNode(data);
+        newCell.appendChild(textNode);
+    });
+
+    // Create the button element
+    const button = document.createElement("button");
+    button.classList.add("button", "button-play");  // Use classList.add to add multiple classes
+    button.textContent = "▶";
+
+    button.addEventListener("click", function() {
+        showFootageOverlay(currentCamConf, videoPath);
+    });
+
+    // Create a new cell and append the button to it
+    const buttonCell = newRow.insertCell();
+    buttonCell.appendChild(button);
 }
 
 
