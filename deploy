@@ -5,8 +5,10 @@ USER=kubikulek231                 # Your username if using sudo
 SCRIPTS_DIR=~/simple-cam-hub/scripts
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_WWW_DIR=/var/www/html/footage
-CUSTOM_NGINX_CONF_PATH=~/simple-cam-hub/nginx.conf
+NGINX_TEMPLATE_PATH=~/simple-cam-hub/nginx.conf.template
+NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
+CUSTOM_NGINX_CONF_PATH="/tmp/custom_nginx.conf"
 SERVICES=(ffmpeg_download.service ffmpeg_hls.service)
 
 # Function to check and update services
@@ -69,9 +71,14 @@ sudo chmod -R 755 $CCTV_FOOTAGE_DIR
 
 # Set the new nginx conf
 echo "Checking for NGINX configuration changes ..."
+# Replace the keyword stored in NGINX_TEMPLATE_TARGET_USER_KEYWORD with $USER in the template
+sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$CUSTOM_NGINX_CONF_PATH"
+
+# Compare the modified template with the existing config
 if ! sudo diff -q "$CUSTOM_NGINX_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH" > /dev/null 2>&1; then
     echo "Updating NGINX configuration ..."
     sudo cp "$CUSTOM_NGINX_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
+
     echo "Checking the new conf file ..."
     if sudo nginx -t; then
         echo "Configuration test passed. Restarting NGINX ..."

@@ -18,7 +18,7 @@
 
 # Default server configuration
 #
-user raspberrypi5;
+user PLACEHOLDER_USER;
 
 events {
 }
@@ -59,7 +59,7 @@ server {
 	}
 
     location /footage/ {
-        alias /home/raspberrypi5/footage/;  # Ensure this matches the symbolic link
+        alias /home/PLACEHOLDER_USER/footage/;  # Ensure this matches the symbolic link
         autoindex on;                    # Enable directory listing
 		types {
         video/mp4 mp4;
