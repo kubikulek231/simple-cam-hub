@@ -1,6 +1,6 @@
 .progress-wrapper {
     position: relative;
-    width: 98%;
+    width: 100%;
     padding: 5px;
     background: rgb(255, 255, 255);
     border-radius: 2px;
@@ -10,31 +10,36 @@
 
 
 .controls-container div {
-    transition: width 0.3s ease;
+    transition: width 0.3s linear;
 }
 
 .progress-container {
     position: relative;
-    width: 100%;
+    width: calc(100% - 8px);
     height: 8px;
     background-color: gray;
     cursor: pointer;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .progress-bar {
+    position: relative;
     height: 100%;
     background-color: red;
     container-type: inline-size;
     border-radius: 2px;
+    width: 98%;
 }
 
 .position-circle {
     position: absolute;
-    width: 13px;
-    height: 13px;
     border-radius: 50%;
     background-color: red;
-    transform: translateX(5%) translateY(-50%) translateY(+4px) translateX(calc(100cqw - 100%));
+    left: calc(100% - 7px);
+    top: -3.5px;;
+    height: 14px;
+    width: 14px;
 }
 
 .video-timestamp-container {
@@ -82,6 +87,7 @@
 }
 
 .video-wrapper {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -102,20 +108,22 @@ video {
 
 .video-finished-overlay {
     position: absolute;
+    display: flex;
+    flex-direction: column;
     pointer-events: none;
     background-color: rgba(0, 0, 0, 0.3); /* Semi-transparent background */
     font-size: 50px;
-    display: flex;
     width: 100%;
     height: 100%;
-    align-items: center;
 }
 
 .video-finished-header {
+    position: relative;
     color: white;
     width: fit-content;
     height: fit-content;
     margin: auto;
+    text-align: center;
 }
 
 

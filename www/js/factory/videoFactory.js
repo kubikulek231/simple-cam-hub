@@ -1,254 +1,210 @@
-export function createStoredVideo(videoSource, videoType = 'video/ts; codecs="hev1"') {
-    // Create video element
+// TODO: Fix the automatic video playback and the buttons enabling when it finishes etc.
+export function createStoredVideo(videoSource, videoType = 'video/mp4') {
+    const video = createVideoElement(videoSource, videoType);
+    const controls = createCustomControls(video, videoSource);
+  
+    const videoContainer = document.createElement('div');
+    videoContainer.classList.add("video-container");
+  
+    const videoWrapper = document.createElement('div');
+    videoWrapper.classList.add("video-wrapper");
+    videoWrapper.appendChild(video);
+    const videoFinishedOverlay = document.createElement('div');
+    const videoFinishedHeader = document.createElement('div');
+    videoFinishedHeader.classList.add("video-finished-header");
+    videoFinishedOverlay.classList.add("video-finished-overlay");
+    videoFinishedHeader.textContent = "Video bylo přehráno!";
+    videoFinishedOverlay.style.display = "none";
+
+    video.addEventListener('ended', () => {
+        videoFinishedOverlay.style.display = "flex";
+      });
+    
+      video.addEventListener('play', () => {
+        videoFinishedOverlay.style.display = "none";
+      });
+
+    videoFinishedOverlay.appendChild(createFlexSpacer());
+    videoFinishedOverlay.appendChild(videoFinishedHeader);
+    videoFinishedOverlay.appendChild(createFlexSpacer());
+    videoWrapper.appendChild(videoFinishedOverlay);
+    videoContainer.appendChild(videoWrapper);
+    videoContainer.appendChild(controls);
+  
+    return videoContainer;
+  }
+  
+  function createVideoElement(videoSource, videoType) {
     const video = document.createElement('video');
-    video.muted = true;  // Set to true if autoplay is needed
-    video.controls = true;  // Enable default controls for testing
-
-// Create a Video.js player instance
-const player = videojs(video, {
-    muted: true,  // Set to true if autoplay is needed
-    controls: true,  // Enable default controls for testing
-    sources: [{
-        src: videoSource,
-        type: videoType
-    }]
-});
-
-// Listen for error events
-player.on('error', (event) => {
-    const error = player.error();
-    console.error('Video.js error:', error);
-    alert('Failed to load the video. Please check the source or try again later.');
-});
-
-// Load the video and attempt to play
-player.ready(() => {
-    player.src({ type: videoType, src: videoSource });
-    player.play().then(() => {
-        console.log('The video has now been loaded and is playing!');
-    }).catch((error) => {
-        console.error('Error playing video:', error);
+    video.controls = false;
+    video.muted = true;
+    video.src = videoSource;
+    video.type = videoType;
+    video.autoplay = true; // Ensure autoplay is set
+  
+    video.addEventListener('error', (event) => {
+      console.error('Error loading video:', event);
     });
-});
-	 // Create custom controls container
+    // Start playback automatically
+    video.play();
+    return video;
+  }
+  
+  function createCustomControls(video, videoSource) {
     const controls = document.createElement('div');
     controls.classList.add('controls-container');
-	
-    // Create progress bar wrapper
+  
     const progressBarWrapper = document.createElement('div');
     progressBarWrapper.className = 'progress-wrapper';
-
-    // Create progress bar container
+  
     const progressBarContainer = document.createElement('div');
     progressBarContainer.className = 'progress-container';
-
-    // Create progress bar (the red bar)
+  
     const progressBar = document.createElement('div');
     progressBar.className = 'progress-bar';
-    progressBar.style.width = '0%';  // Initial width (starts empty)
+    progressBar.style.width = '0%';
     progressBarContainer.appendChild(progressBar);
-    // Create a circle to highlight the current position
-    const currentPositionCircle = document.createElement('div');
-    currentPositionCircle.classList.add('position-circle');
-    progressBar.appendChild(currentPositionCircle);
 
-    progressBarWrapper.appendChild(progressBarContainer)
+    const positionCircle = document.createElement('div');
+    positionCircle.classList.add('position-circle'); 
+    progressBar.appendChild(positionCircle);
 
-    // Append the progress bar to the controls
+    progressBarWrapper.appendChild(progressBarContainer);
     controls.appendChild(progressBarWrapper);
-
-    // Create a timestamp display
+  
+    // Add click-to-seek functionality on the progress bar container
+    progressBarContainer.addEventListener('click', (event) => {
+      const rect = progressBarContainer.getBoundingClientRect();
+      const offsetX = event.clientX - rect.left;
+      const percentage = offsetX / rect.width;
+      const newTime = percentage * video.duration;
+      video.currentTime = newTime;
+      video.play(); // Resume playback from the new time
+    });
+  
     const timestampContainer = document.createElement('div');
     timestampContainer.classList.add('video-timestamp-container');
     const timestampHeader = document.createElement('div');
     timestampHeader.classList.add('video-timestamp-header');
-    timestampHeader.textContent = "Přehráno: "
+    timestampHeader.textContent = "Přehráno: ";
     const timestampDisplay = document.createElement('div');
     timestampDisplay.classList.add('video-timestamp-content');
-
-    // Create STOP button
+    timestampContainer.appendChild(timestampHeader);
+    timestampContainer.appendChild(timestampDisplay);
+  
     const stopButton = document.createElement('button');
     stopButton.textContent = '◼ ZASTAVIT';
     stopButton.classList.add("button-stop");
     stopButton.addEventListener('click', function () {
-        video.pause(); // Pauses the video
-        stopButton.disabled = true;   // Disable the stop button
-        resumeButton.disabled = false; // Enable the resume button
+      video.pause();
+      stopButton.disabled = true;
+      resumeButton.disabled = false;
     });
-
-    // Get reference to the overlay element
-    const videoFinishedOverlay = document.createElement('div');
-    videoFinishedOverlay.classList.add("video-finished-overlay");
-    const videoFinishedHeader = document.createElement('div');
-    videoFinishedHeader.classList.add("video-finished-header");
-    videoFinishedHeader.textContent = "Video přehráno ...";
-    videoFinishedOverlay.appendChild(videoFinishedHeader);
-    videoFinishedOverlay.style.display = 'none'; // Hide it initially
-
-    // Create RESUME button (will later change to PLAY AGAIN when video ends)
+  
     const resumeButton = document.createElement('button');
     resumeButton.textContent = '▶ POKRAČOVAT';
     resumeButton.classList.add("button-resume");
-    resumeButton.disabled = true; // Initially disabled until the video is paused
+    resumeButton.disabled = true;
     resumeButton.addEventListener('click', function () {
-        if (video.ended) {
-            // If video has ended, restart the video
-            video.currentTime = 0; // Reset video to the beginning
-            video.play(); // Play video from the beginning
-        } else {
-            // Resume video if not ended
-            video.play(); // Resumes the video
-        }
-        resumeButton.disabled = true; // Disable the resume button
-        stopButton.disabled = false;  // Enable the stop button
+      // If video ended, reset to the start
+      if (video.ended) {
+        video.currentTime = 0;
+      }
+      video.play();
+      resumeButton.disabled = true;
+      stopButton.disabled = false;
     });
-
-    // Listen for the 'ended' event on the video element
-    video.addEventListener('ended', function () {
-        // When the video ends, change resume button to "Play Again"
-        stopButton.disabled = true;   // Disable stop button
-        resumeButton.textContent = '⟳ PŘEHRÁT ZNOVU'; // Change button text to "Play Again"
-        resumeButton.disabled = false; // Enable resume button (now acting as play again button)
-        videoFinishedOverlay.style.display = 'block'; // Show overlay when video finishes
-    });
-
-    // Hide the overlay when the video starts playing
-    video.addEventListener('play', function () {
-        videoFinishedOverlay.style.display = 'none'; // Hide overlay when video plays
-        stopButton.disabled = false; // Enable stop button when playing
-        resumeButton.disabled = true; // Disable resume button when playing
-    });
-
-    // Optional: Play video when metadata is loaded
-    video.addEventListener('loadedmetadata', function () {
-        video.play();
-    });
-
-    // Add download button logic
+  
     const downloadButton = document.createElement('button');
     downloadButton.textContent = '💾 ULOŽIT DO POČÍTAČE';
     downloadButton.classList.add("button-download");
-    // Add an event listener to handle the download
     downloadButton.addEventListener('click', function () {
-        const videoUrl = videoSource;  // Replace with your video URL
-        downloadVideo(videoUrl);
+      downloadVideo(videoSource);
     });
-
-    // Variable to track if the video was playing before seeking
-    let wasPlayingBeforeSeek = false;
-
-    // Add event listener to update the progress bar, circle position, and timestamp as the video plays
+  
     video.addEventListener('timeupdate', function () {
-        const percent = (video.currentTime / video.duration) * 100;
-        progressBar.style.width = percent + '%';
-        
-        // Update the timestamp display
-        const currentTime = formatTime(video.currentTime);
-        const totalDuration = formatTime(video.duration);
-        timestampDisplay.textContent = `${currentTime} / ${totalDuration}`;
+      const percent = (video.currentTime / video.duration) * 100;
+      progressBar.style.width = percent + '%';
+  
+      const currentTime = formatTime(video.currentTime);
+      const totalDuration = formatTime(video.duration);
+      timestampDisplay.textContent = `${currentTime} / ${totalDuration}`;
     });
-
-    // Add event listener to handle clicks on the progress bar
-    progressBarContainer.addEventListener('click', function (event) {
-        const rect = progressBarContainer.getBoundingClientRect(); // Get size and position of the bar
-        const offsetX = event.clientX - rect.left; // Calculate click position relative to the container
-        const newTime = (offsetX / rect.width) * video.duration; // Calculate corresponding time in the video
-        
-        // Check if the video was playing before seeking
-        wasPlayingBeforeSeek = !video.paused;
-
-        // Seek the video to the new time
-        video.currentTime = newTime;
-
-        // If the video was playing, resume playing after the seek
-        if (wasPlayingBeforeSeek) {
-            video.play();
-        } else {
-            // Ensure correct button states if video was paused before seek
-            resumeButton.disabled = false;
-            stopButton.disabled = true;
-            resumeButton.textContent = '▶ POKRAČOVAT';
-        }
+  
+    video.addEventListener('ended', () => {
+      stopButton.disabled = true;
+      resumeButton.disabled = false;
+      resumeButton.textContent = '▶ PŘEHRÁT ZNOVU';
+      positionCircle.style.display = "none";
     });
-
-    // Append buttons and controls to the container
-    const flexSpacer = document.createElement("div");
-    flexSpacer.classList.add("flex-spacer");
-
-    // Create a button container and append STOP and RESUME buttons
+  
+    video.addEventListener('play', () => {
+      stopButton.disabled = false;
+      resumeButton.disabled = true;
+      // Reset the resume button text in case it was changed after video ended
+      resumeButton.textContent = '▶ POKRAČOVAT';
+      positionCircle.style.display = "block";
+    });
+  
+    video.addEventListener('pause', () => {
+      if (!video.ended) {
+        stopButton.disabled = true;
+        resumeButton.disabled = false;
+      }
+    });
+  
     const buttonContainer = document.createElement('div');
     buttonContainer.classList.add("resume-stop-time-container");
     buttonContainer.appendChild(stopButton);
     buttonContainer.appendChild(resumeButton);
-    timestampContainer.appendChild(timestampHeader);
-    timestampContainer.appendChild(timestampDisplay); // Append to controls
     buttonContainer.appendChild(timestampContainer);
-    buttonContainer.appendChild(flexSpacer);
+
+    buttonContainer.appendChild(createFlexSpacer());
     buttonContainer.appendChild(downloadButton);
+  
     controls.appendChild(buttonContainer);
-
-    // Wrap everything in a container
-    const videoContainer = document.createElement('div');
-    videoContainer.classList.add("video-container");
-    const videoWrapper = document.createElement('div');
-    videoWrapper.classList.add("video-wrapper");
-    videoWrapper.appendChild(video);
-    videoWrapper.appendChild(videoFinishedOverlay);
-    videoContainer.appendChild(videoWrapper);
-    videoContainer.appendChild(controls);
-
-    // Return the container, which includes the video, custom controls, and buttons
-    return videoContainer;
-
-}
-
-// Download video function
-function downloadVideo(videoUrl) {
-    // Create an anchor element
+  
+    return controls;
+  }
+  
+  // Download video function
+  function downloadVideo(videoUrl) {
     const a = document.createElement('a');
-    
-    // Set the href to the video URL
     a.href = videoUrl;
-
-    // Set the download attribute without specifying a custom filename
-    a.download = '';  // Empty string will use the file's original name
-
-    // Append the anchor to the body
+    a.download = ''; // Use the file's original name
     document.body.appendChild(a);
-
-    // Programmatically click the anchor to trigger the download
     a.click();
-
-    // Remove the anchor from the document
     document.body.removeChild(a);
-}
-
-
-// Function to format time in HH:MM:SS
-function formatTime(seconds) {
+  }
+  
+  // Function to format time in HH:MM:SS
+  function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
     return `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-export function createStreamedVideo(videoSource, controls = true) {
+  }
+  
+  export function createStreamedVideo(videoSource, controls = true) {
     const video = document.createElement('video');
-    video.controls = controls;  // Enable browser default controls
+    video.controls = controls;
     video.muted = true;
-    video.src = videoSource;  // Set the video source
+    video.src = videoSource;
     video.autoplay = true;
-
+  
     video.addEventListener('error', (event) => {
-        console.error('Error loading video:', event);
+      console.error('Error loading video:', event);
     });
-
+  
     const videoWrapper = document.createElement('div');
     videoWrapper.classList.add("video-wrapper");
     videoWrapper.appendChild(video);
-
+  
     return videoWrapper;
-}
-
-
-
+  }
+  
+  export function createFlexSpacer() {
+    const flexboxSpacer = document.createElement('div');
+    flexboxSpacer.className="flex-spacer";
+    return flexboxSpacer;
+  }
