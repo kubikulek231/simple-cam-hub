@@ -12,9 +12,39 @@ const BROWSER_PAGE_NUM_ID = "browserPageNum";
 const NEXT_BUTTON_ID = "browserPageNext";
 const PREV_BUTTON_ID = "browserPagePrev";
 
-var currentPageNum = 1;
-var currentPageTotal = 1;
-var currentCamConf = null;
+export function handleBrowserOverlay() {
+    // Updater for the footage video list  
+    // Get video list of all cameras first, then update it every 5 seconds
+    
+
+    // Handling opening and closing the browser overlay
+    const browserOverlayButtons = document.querySelectorAll('.button-open-browser-overlay');
+    browserOverlayButtons.forEach(button => {
+        button.addEventListener('click', async (event) => {
+            const cameraID = event.target.parentNode.parentNode.getAttribute("camera-id");
+            const currentCamConf = loadedCameraConfList[cameraID];
+            const currentPageNum = 1;
+            const currentPageTotal = await getPageTotal(ITEMS_PER_PAGE);
+            setCurrentPageAndTotalHTML();
+            pauseAllStreams();
+        });
+    });
+
+    const exitOverlayButtonElement = document.getElementById("exitBrowserOverlayButton");
+    const prevPageButtonElement = document.getElementById("browserPagePrev");
+    const nextPageButtonElement = document.getElementById("browserPageNext");
+    exitOverlayButtonElement.addEventListener('click', (event) => {
+        hideBrowserOverlay();
+        resumeAllStreams();
+        currentCamConf = null;
+    });
+    prevPageButtonElement.addEventListener('click', (event) => {
+        goPrevPage();
+    });
+    nextPageButtonElement.addEventListener('click', (event) => {
+        goNextPage();
+    });
+}
 
 function getCurrentDateTimeInWords() {
     const now = new Date();
@@ -258,35 +288,4 @@ function createTableEntry(tableId, rowData, videoPath) {
     // Create a new cell and append the button to it
     const buttonCell = newRow.insertCell();
     buttonCell.appendChild(button);
-}
-
-
-
-export function handleBrowserOverlay() {
-    const browserOverlayButtons = document.querySelectorAll('.button-open-browser-overlay');
-    browserOverlayButtons.forEach(button => {
-        button.addEventListener('click', async (event) => {
-            const cameraID = event.target.parentNode.parentNode.getAttribute("camera-id");
-            currentCamConf = loadedCameraConfList[cameraID];
-            currentPageNum = 1;
-            currentPageTotal = await getPageTotal(ITEMS_PER_PAGE);
-            setCurrentPageAndTotalHTML();
-            pauseAllStreams();
-        });
-    });
-
-    const exitOverlayButtonElement = document.getElementById("exitBrowserOverlayButton");
-    const prevPageButtonElement = document.getElementById("browserPagePrev");
-    const nextPageButtonElement = document.getElementById("browserPageNext");
-    exitOverlayButtonElement.addEventListener('click', (event) => {
-        hideBrowserOverlay();
-        resumeAllStreams();
-        currentCamConf = null;
-    });
-    prevPageButtonElement.addEventListener('click', (event) => {
-        goPrevPage();
-    });
-    nextPageButtonElement.addEventListener('click', (event) => {
-        goNextPage();
-    });
 }
