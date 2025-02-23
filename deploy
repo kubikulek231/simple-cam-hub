@@ -9,6 +9,7 @@ NGINX_TEMPLATE_PATH=~/simple-cam-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
 CUSTOM_NGINX_CONF_PATH="/tmp/custom_nginx.conf"
+DEPLOY_SERVICES=0
 SERVICES=(ffmpeg_download.service ffmpeg_hls.service)
 
 # Function to check and update services
@@ -28,10 +29,15 @@ update_service() {
     fi
 }
 
-# Install or update services
-for service in "${SERVICES[@]}"; do
-    update_service "$service"
-done
+# Deploy services if enabled
+if [ "$DEPLOY_SERVICES" -eq 1 ]; then
+    # Install or update services
+    for service in "${SERVICES[@]}"; do
+        update_service "$service"
+    done
+else
+    echo "Service deployment is disabled (DEPLOY_SERVICES=$DEPLOY_SERVICES)."
+fi
 
 # Remove the target directory
 echo "Removing $TARGET_DIR ..."
