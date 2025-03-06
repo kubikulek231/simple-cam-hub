@@ -1,4 +1,4 @@
-export function getVideoList(directoryUrl, extensions = [".mp4", ".mkv", ".ts"]) {
+export function fetchVideoList(directoryUrl, extensions = [".mp4", ".mkv", ".ts"]) {
     return new Promise((resolve, reject) => {
         fetch(directoryUrl)
             .then(response => {

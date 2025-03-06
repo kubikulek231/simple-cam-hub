@@ -1,50 +1,73 @@
 // TODO: fix a bug where the browsing does not get updated when opening different cam footage
 
-import { getVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
+import { fetchVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { showFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 
 const ITEMS_PER_PAGE = 12;
-const BROWSER_TABLE_ID = "browserTable";
-const BROWSER_PAGE_NUM_ID = "browserPageNum";
-
-const NEXT_BUTTON_ID = "browserPageNext";
-const PREV_BUTTON_ID = "browserPagePrev";
 
 export function handleBrowserOverlay() {
-    // Updater for the footage video list  
-    // Get video list of all cameras first, then update it every 5 seconds
-    
-
     // Handling opening and closing the browser overlay
     const browserOverlayButtons = document.querySelectorAll('.button-open-browser-overlay');
     browserOverlayButtons.forEach(button => {
         button.addEventListener('click', async (event) => {
             const cameraID = event.target.parentNode.parentNode.getAttribute("camera-id");
             const currentCamConf = loadedCameraConfList[cameraID];
-            const currentPageNum = 1;
-            const currentPageTotal = await getPageTotal(ITEMS_PER_PAGE);
-            setCurrentPageAndTotalHTML();
-            pauseAllStreams();
+            const browserOverlay = await createBrowserOverlay(currentCamConf, ITEMS_PER_PAGE, 1);
+            document.body.appendChild(browserOverlay);
         });
     });
-
-    const exitOverlayButtonElement = document.getElementById("exitBrowserOverlayButton");
-    const prevPageButtonElement = document.getElementById("browserPagePrev");
-    const nextPageButtonElement = document.getElementById("browserPageNext");
-    exitOverlayButtonElement.addEventListener('click', (event) => {
-        hideBrowserOverlay();
-        resumeAllStreams();
-        currentCamConf = null;
-    });
-    prevPageButtonElement.addEventListener('click', (event) => {
-        goPrevPage();
-    });
-    nextPageButtonElement.addEventListener('click', (event) => {
-        goNextPage();
-    });
 }
+
+async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
+    // Fetch and process video list
+    const videoList = await fetchVideoList(cameraConf.footageDirectory);
+    const loadedVideoList = videoList.reverse();
+    const pageTotalNum = Math.ceil(videoList.length / itemsPerPage);
+    let videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
+
+    // Create UI elements
+    let browserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
+    const browserHeader = createBrowserHeader();
+    let browserFooter = createBrowserFooter(pageNum, pageTotalNum);
+    const browserDescriptor = createBrowserDescriptor(cameraConf);
+
+    // Create overlay
+    const browserOverlay = document.createElement("div");
+    browserOverlay.id = "browserOverlay";
+    browserOverlay.append(browserHeader, browserDescriptor, browserTable, browserFooter);
+
+    // Add event delegation for button clicks
+    browserOverlay.addEventListener("click", (event) => {
+        if (event.target.id === "exitBrowserOverlayButton") {
+            browserOverlay.remove();
+            return;
+        } 
+        
+        if (event.target.id === "browserPagePrev" && pageNum > 1) {
+            pageNum -= 1;
+        } else if (event.target.id === "browserPageNext" && pageNum < pageTotalNum) {
+            pageNum += 1;
+        } else {
+            return;
+        }
+        
+        // Recalculate paginated list and update table/footer
+        videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
+        console.log("pageNum", pageNum);
+        const newBrowserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
+        const newBrowserFooter = createBrowserFooter(pageNum, pageTotalNum);
+
+        browserOverlay.replaceChild(newBrowserTable, browserTable);
+        browserOverlay.replaceChild(newBrowserFooter, browserFooter);
+        browserTable = newBrowserTable;
+        browserFooter = newBrowserFooter;
+    });
+
+    return browserOverlay;
+}
+
 
 function getCurrentDateTimeInWords() {
     const now = new Date();
@@ -65,52 +88,6 @@ function getCurrentDateTimeInWords() {
     return dateInWords + ", " + hours + ":" + minutes;
 }
 
-
-function setCurrentPageAndTotalHTML() {
-    showBrowserOverlay(currentCamConf, currentPageNum);
-    const pageNumElement = document.getElementById(BROWSER_PAGE_NUM_ID);
-    pageNumElement.setAttribute("pageNum", currentPageNum);
-    pageNumElement.setAttribute("pageTotal", currentPageTotal);
-    const pageTotalString = currentPageTotal < 1 ? "1" : String(currentPageTotal);
-    pageNumElement.textContent = "Strana " + String(currentPageNum) + " z " + pageTotalString;
-    
-    // Disable the next button if on the last page
-    const nextButton = document.getElementById(NEXT_BUTTON_ID);
-    if (currentPageNum >= currentPageTotal) {
-        nextButton.setAttribute("disabled", true);
-    } else {
-        nextButton.removeAttribute("disabled"); // Remove disabled attribute instead of setting it to false
-    }
-
-    // Disable the previous button if on the first page
-    const prevButton = document.getElementById(PREV_BUTTON_ID);
-    if (currentPageNum <= 1) {
-        prevButton.setAttribute("disabled", true);
-    } else {
-        prevButton.removeAttribute("disabled"); // Remove disabled attribute instead of setting it to false
-    }
-}
-
-function goPrevPage() {
-    if (currentPageNum > 1) {
-        currentPageNum = currentPageNum - 1;
-        setCurrentPageAndTotalHTML(currentPageNum, currentPageTotal);
-    }
-}
-
-function goNextPage() {
-    // Get the total pages and handle it using `.then()`
-    getPageTotal(ITEMS_PER_PAGE).then(totalPages => {
-        currentPageTotal = totalPages;
-        if (currentPageTotal > currentPageNum) {
-            currentPageNum = currentPageNum + 1;
-            setCurrentPageAndTotalHTML(currentPageNum, currentPageTotal);
-        }
-    }).catch(error => {
-        console.error('Failed to fetch page total:', error);
-    });
-}
-
 function paginateItems(items, itemsPerPage, pageNumber) {
     // Calculate the starting index
     const startIndex = (pageNumber - 1) * itemsPerPage;
@@ -123,151 +100,52 @@ function paginateItems(items, itemsPerPage, pageNumber) {
     return paginatedItems;
 }
 
-async function getPageTotal(itemsPerPage) {
-    const cameraConf = currentCamConf;
+export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
+    console.log("pageNum", pageNum);
+    console.log("paginatedVideoList", paginatedVideoList);
+    console.log("cameraConf", cameraConf);
+    const element = document.createElement("div");
+    element.id = "browserTable";
 
-    try {
-		console.log(currentCamConf);
-        const videoList = await getVideoList(cameraConf.footageDirectory);
-		console.log(videoList);
-        // Drop all previous rows
-        const totalPageNum = Math.ceil(videoList.length / itemsPerPage); // No need to parseInt
-        return totalPageNum; // Return the total number of pages
-    } catch (error) {
-        // Handle any errors that may occur
-        console.error('Failed to fetch video list:', error);
-        return 0; // Return 0 in case of error
-    }
-}
+    // Get the table body element
+    const table = createTable();
+    
+    // table.setAttribute("camera-id", cameraConf.id)
+    const tableBody = table.querySelector(`tbody`);
 
-export function hideBrowserOverlay() {
-    const browserOverlayElements = document.getElementsByClassName("browser-overlay");
+    // Populate the table with video items
+    paginatedVideoList.forEach((videoPath, index) => {
+        const id = index + (pageNum - 1) * ITEMS_PER_PAGE;
+        const splitVideoName = splitVideoFilename(videoPath);
+        const dayMonthNames = getDayAndMonthNames(
+            splitVideoName.day,
+            splitVideoName.month,
+            splitVideoName.year
+        );
+        const hourString = String(splitVideoName.hour);
+        const minuteString = String(splitVideoName.minute).padStart(2, "0");
 
-    Array.from(browserOverlayElements).forEach(element => {
-        element.setAttribute('hidden', 'true'); // Hide the element
-    });
-}
+        const rowData = [
+            id,
+            splitVideoName.year,
+            dayMonthNames[0],
+            splitVideoName.day + ".",
+            dayMonthNames[1],
+            hourString + ":" + minuteString,
+        ];
 
-export function dropTableRows() {
-    // Drop all previous rows
-    const tableBody = document.getElementById(BROWSER_TABLE_ID).getElementsByTagName('tbody')[0];
-    tableBody.innerHTML = ''; // Clear all rows
-}
-
-export async function showBrowserOverlay(cameraConf, pageNumber = 1) {
-    const browserOverlayElements = document.getElementsByClassName("browser-overlay");
-    const browserOverlayDescriptor = document.getElementById("browserOverlayDescriptor");
-    const browserOverlayDateTime = document.getElementById("browserOverlayDateTime");
-
-    // Show the overlay elements
-    Array.from(browserOverlayElements).forEach(element => {
-        element.removeAttribute('hidden'); 
+        const newRow = createTableRow(rowData, videoPath, cameraConf) 
+        tableBody.appendChild(newRow);
     });
 
-    try {
-        const videoList = await getVideoList(cameraConf.footageDirectory);
-    
-        // Reverse the video list
-        const loadedVideoList = videoList.reverse();
-        const videoListPage = paginateItems(loadedVideoList, ITEMS_PER_PAGE, pageNumber);
-    
-        // Await the total pages
-        const totalPages = await getPageTotal(ITEMS_PER_PAGE);
-        currentPageTotal = totalPages;
-    
-        // Set description
-        browserOverlayDescriptor.textContent = "Vybraná kamera: " + cameraConf.title;
-    
-        // Function to update the current date and time every second
-        function updateDateTime() {
-            browserOverlayDateTime.textContent = "Dnes je: " + getCurrentDateTimeInWords();
-        }
-    
-        // Update the time every second
-        setInterval(updateDateTime, 1000); // 1000 ms = 1 second
-        updateDateTime(); // Initial call to display the time immediately without waiting 1 second
-    
-        // Get the table body element
-        const tableBody = document.querySelector(`#${BROWSER_TABLE_ID} tbody`);
-    
-        // Get current rows in the table
-        const currentRows = Array.from(tableBody.querySelectorAll('tr'));
-        console.log(currentRows);
-        // Populate the table with video items
-        videoListPage.forEach((videoItem, index) => {
-            const id = index + (pageNumber - 1) * ITEMS_PER_PAGE;
-            const splitVideoName = splitVideoFilename(videoItem);
-            const dayMonthNames = getDayAndMonthNames(
-                splitVideoName.day,
-                splitVideoName.month,
-                splitVideoName.year
-            );
-            const hourString = String(splitVideoName.hour);
-            const minuteString = String(splitVideoName.minute).padStart(2, "0");
-    
-            const rowData = [
-                id,
-                splitVideoName.year,
-                dayMonthNames[0],
-                splitVideoName.day + ".",
-                dayMonthNames[1],
-                hourString + ":" + minuteString,
-            ];
-    
-            if (currentRows[index]) {
-                // If the row exists, update its content
-                updateTableRow(currentRows[index], rowData, videoItem);
-            } else {
-                // If the row doesn't exist, create a new one
-                createTableEntry(BROWSER_TABLE_ID, rowData, videoItem);
-            }
-        });
-    
-        // Remove or hide any extra rows if needed
-        if (currentRows.length > videoListPage.length) {
-            for (let i = videoListPage.length; i < currentRows.length; i++) {
-                tableBody.removeChild(currentRows[i]); // Remove extra rows
-            }
-        }
-    
-    } catch (error) {
-        // Handle any errors that may occur
-        console.error('Failed to fetch video list:', error);
-    }
+    element.appendChild(tableBody);
+
+    return element;
 }
 
-// Function to update the content of an existing table row
-function updateTableRow(row, rowData, videoPath) {
-    const cells = row.querySelectorAll('td');
-
-    // Update text content of each cell (except the last one, which contains the button)
-    rowData.forEach((data, i) => {
-        cells[i].textContent = data;
-    });
-
-    // Find the button inside the last cell
-    const button = row.querySelector("button");
-    if (button) {
-        // Update the button's event listener with the new videoPath
-        button.replaceWith(button.cloneNode(true));  // Remove existing event listener
-        const newButton = row.querySelector("button");
-        newButton.addEventListener("click", function() {
-            showFootageOverlay(currentCamConf, videoPath);
-        });
-    }
-}
-
-function createTableEntry(tableId, rowData, videoPath) {
-    // Find the table by its ID
-    const table = document.getElementById(tableId);
-    if (!table) {
-        console.error(`Table with ID '${tableId}' not found.`);
-        return;
-    }
-    const tableBody = table.getElementsByTagName("tbody")[0];
-
+function createTableRow(rowData, videoPath, cameraConf) {
     // Create a new table row
-    const newRow = tableBody.insertRow();
+    const newRow = document.createElement("tr");
 
     // Loop through the rowData array and create cells for each value
     rowData.forEach(data => {
@@ -282,10 +160,155 @@ function createTableEntry(tableId, rowData, videoPath) {
     button.textContent = "▶";
 
     button.addEventListener("click", function() {
-        showFootageOverlay(currentCamConf, videoPath);
+        showFootageOverlay(cameraConf, videoPath);
+        console.log("showing footage overlay for: ", videoPath);
     });
 
     // Create a new cell and append the button to it
     const buttonCell = newRow.insertCell();
     buttonCell.appendChild(button);
+    return newRow;
+}
+
+function createTable() {
+    const table = document.createElement('table');
+    table.id = 'browserTable';
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    const columns = ['ID', 'Rok', 'Den v týdnu', 'Den', 'Měsíc', 'Čas', 'Spustit'];
+    // Loop through columns to create th elements
+    columns.forEach(column => {
+        const th = document.createElement('th');
+        th.textContent = column;
+        headerRow.appendChild(th);
+    });
+    // Append header row to the table header
+    thead.appendChild(headerRow);
+    const tbody = document.createElement('tbody');
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    return table;
+}
+
+// Function to create the overlay page container
+function createBrowserFooter(pageNum, pageTotalNum) {
+    // Create the container div
+    const container = document.createElement('div');
+    container.id = 'browserOverlayPageContainer';
+    container.classList.add('browser-overlay');
+
+    // Create the previous page button
+    const prevButton = document.createElement('button');
+    prevButton.id = 'browserPagePrev';
+    prevButton.classList.add('button');
+    prevButton.textContent = '◀ PŘED. STRANA';
+
+    // Create the page number container
+    const pageNumContainer = document.createElement('div');
+    pageNumContainer.id = 'browserPageNum';
+    pageNumContainer.classList.add('browser-overlay');
+    pageNumContainer.textContent = `Strana ${pageNum} z ${pageTotalNum}`;
+
+    // Create the next page button
+    const nextButton = document.createElement('button');
+    nextButton.id = 'browserPageNext';
+    nextButton.classList.add('button');
+    nextButton.textContent = 'NÁSL. STRANA ▶';
+
+    // Disable the next button if on the last page
+    if (pageNum >= pageTotalNum) {
+        nextButton.setAttribute("disabled", true);
+    } else {
+        nextButton.removeAttribute("disabled"); // Remove disabled attribute instead of setting it to false
+    }
+
+    // Disable the previous button if on the first page
+    if (pageNum <= 1) {
+        prevButton.setAttribute("disabled", true);
+    } else {
+        prevButton.removeAttribute("disabled"); // Remove disabled attribute instead of setting it to false
+    }
+
+    // Append the elements to the container
+    container.appendChild(prevButton);
+    container.appendChild(pageNumContainer);
+    container.appendChild(nextButton);
+    return container;
+}
+
+
+// Function to create the header container
+function createBrowserHeader() {
+    // Create the header container div
+    const headerContainer = document.createElement('div');
+    headerContainer.id = 'browserOverlayHeader';
+    headerContainer.classList.add('browser-overlay');
+
+    // Create the title div
+    const titleDiv = document.createElement('div');
+    titleDiv.id = 'browserOverlayTitle';
+    titleDiv.classList.add('browser-overlay');
+    titleDiv.textContent = '📂Prohlížeč záznamů';
+
+    // Create the close button
+    const closeButton = document.createElement('button');
+    closeButton.id = 'exitBrowserOverlayButton';
+    closeButton.classList.add('button', 'button-close');
+    closeButton.textContent = '✖ ZAVŘÍT';
+
+    // Create the flex-spacer div
+    const flexSpacer = document.createElement('div');
+    flexSpacer.classList.add('flex-spacer');
+
+    // Append title, spacer, and button to the header container
+    headerContainer.appendChild(titleDiv);
+    headerContainer.appendChild(flexSpacer);
+    headerContainer.appendChild(closeButton);
+
+    // Append the header container to the body (or any other element)
+    return headerContainer;
+}
+
+// Function to create the descriptor container
+function createBrowserDescriptor(cameraConf) {
+    // Create the descriptor container div
+    const descriptorContainer = document.createElement('div');
+    descriptorContainer.id = 'browserOverlayDescriptorContainer';
+    descriptorContainer.classList.add('browser-overlay');
+
+    // Create the descriptor div
+    const descriptorDiv = document.createElement('div');
+    descriptorDiv.id = 'browserOverlayDescriptor';
+    descriptorDiv.classList.add('browser-overlay');
+
+    // Create the date-time div
+    const dateTimeDiv = document.createElement('div');
+    dateTimeDiv.id = 'browserOverlayDateTime';
+    dateTimeDiv.classList.add('browser-overlay');
+
+    // Create another flex-spacer div
+    const flexSpacer2 = document.createElement('div');
+    flexSpacer2.classList.add('flex-spacer');
+
+    // Append the descriptor info
+    // Set description
+    descriptorDiv.textContent = "Vybraná kamera: " + cameraConf.title;
+
+    // Function to update the current date and time every second
+    function updateDateTime() {
+        dateTimeDiv.textContent = "Dnes je: " + getCurrentDateTimeInWords();
+    }
+
+    // Update the time every second
+    setInterval(updateDateTime, 1000); // 1000 ms = 1 second
+    updateDateTime(); // Initial call to display the time immediately without waiting 1 second
+
+
+    // Append descriptor, spacer, and date-time to the descriptor container
+    descriptorContainer.appendChild(descriptorDiv);
+    descriptorContainer.appendChild(flexSpacer2);
+    descriptorContainer.appendChild(dateTimeDiv);
+
+    // Append the descriptor container to the body (or any other element)
+    return descriptorContainer;
 }

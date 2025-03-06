@@ -1,6 +1,10 @@
-#browserOverlayContainer {
+#browserOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    background-color: rgb(0, 74, 74);
 }
 
 #browserOverlayContentWrapper {
@@ -39,28 +43,38 @@
     display: flex;
     flex-direction: row;
     width: 90%;
+    margin: auto;
 }
 
 #browserOverlayTitle {
     font-size: 30px;
+    margin: auto;
 }
 
 #browserOverlayDescriptorContainer {
     display: flex;
     flex-direction: row;
     width: 90%;
+    margin: auto;
 }
 
 #browserTable {
     padding-top: 10px;
-    width: 100%; /* Make the table span 100% of the parent */
+    width: fit-content; /* Make the table span 100% of the parent */
+    height: fit-content;
     display: block;
     max-height: 100%;
     overflow-y: auto; /* Enable vertical scrolling if the table exceeds the height */
     overflow-x: auto; /* Enable horizontal scrolling if the table exceeds the width */
     table-layout: fixed; /* Distribute the cell width equally to fill the parent */
     border-collapse: collapse; /* Remove gaps between cells */
+    margin: auto;
 }
+
+#browserTable tbody {
+    margin: auto;
+}
+
 
 #browserTable tbody tr:nth-child(even) {
     background-color: rgba(255, 255, 255, 0.2); /* Apply black background to every second row */
@@ -99,10 +113,11 @@
     width: 90%;
     padding-bottom: 10px;
     padding-top: 10px;
+    margin: auto;
+
 }
 
 #browserPageNum {
     flex-grow: 1;
     text-align: center;
-    margin: auto;
 }
