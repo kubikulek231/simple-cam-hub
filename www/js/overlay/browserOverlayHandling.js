@@ -2,7 +2,7 @@
 
 import { fetchVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
-import { showFootageOverlay } from "./footageOverlayHandling.js";
+import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
 
 const ITEMS_PER_PAGE = 12;
@@ -160,7 +160,7 @@ function createTableRow(rowData, videoPath, cameraConf) {
     button.textContent = "▶";
 
     button.addEventListener("click", function() {
-        showFootageOverlay(cameraConf, videoPath);
+        createFootageOverlay(cameraConf, videoPath);
         console.log("showing footage overlay for: ", videoPath);
     });
 
