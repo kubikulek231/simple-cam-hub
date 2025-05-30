@@ -79,17 +79,17 @@ server {
         }
     }
 
-    location /cam1/ {
+    location /footage/cam1/ {
         add_header 'Access-Control-Allow-Origin' '*';
         # proxy_pass or alias if needed
         # ...other settings if required...
     }
-    location /cam2/ {
+    location /footage/cam2/ {
         add_header 'Access-Control-Allow-Origin' '*';
         # proxy_pass or alias if needed
         # ...other settings if required...
     }
-    location /cam3/ {
+    location /footage/cam3/ {
         add_header 'Access-Control-Allow-Origin' '*';
         # proxy_pass or alias if needed
         # ...other settings if required...
