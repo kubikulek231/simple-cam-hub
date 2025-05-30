@@ -79,6 +79,22 @@ server {
         }
     }
 
+    location /cam1/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        # proxy_pass or alias if needed
+        # ...other settings if required...
+    }
+    location /cam2/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        # proxy_pass or alias if needed
+        # ...other settings if required...
+    }
+    location /cam3/ {
+        add_header 'Access-Control-Allow-Origin' '*';
+        # proxy_pass or alias if needed
+        # ...other settings if required...
+    }
+
 }
 }
 
