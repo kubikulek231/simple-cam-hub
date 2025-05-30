@@ -1,40 +1,5 @@
 /* CSS styles for file browser overlay */
 
-#browserOverlay {
-}
-
-#browserOverlayContentWrapper {
-    position: fixed;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
-
-    width: fit-content;
-    height: fit-content;
-
-    max-height: 100%;
-    overflow-y: auto;
-    max-width: none; 
-    overflow-x: auto;
-
-    /* Centering */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    z-index: 10;
-
-    background-color: rgb(0, 0, 0);
-    padding-top: 10px;
-    padding-left: 7px;
-    padding-right: 7px;
-    min-width: 600px;
-    min-height: 600px;
-}
-
 #browserOverlayHeader {
     display: flex;
     flex-direction: row;

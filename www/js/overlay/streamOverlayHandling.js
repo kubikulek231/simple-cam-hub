@@ -1,6 +1,7 @@
 import { createStreamContainer } from "../factory/streamContainerFactory.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
+import { getCurrentDateTimeInWords } from "../utils.js";
 
 // Create and show the overlay
 export function createStreamOverlay(cameraConf) {
@@ -11,14 +12,15 @@ export function createStreamOverlay(cameraConf) {
     overlayContainer.className = "stream-overlay";
     overlayContainer.classList.add("overlay-window");
 
-    // Overlay main box
-    const overlay = document.createElement("div");
-    overlay.id = "streamOverlayContainer";
-    overlay.classList.add("stream-overlay");
+    const topSpacer = document.createElement("div");
+    topSpacer.classList.add("overlay-vertical-spacer");
+    const botSpacer = document.createElement("div");
+    botSpacer.classList.add("overlay-vertical-spacer");
 
     // Header
     const header = document.createElement("div");
     header.id = "streamOverlayHeader";
+    header.classList.add("overlay-item");
 
     const playerTitle = document.createElement("div");
     playerTitle.id = "streamOverlayPlayerTitle";
@@ -46,18 +48,23 @@ export function createStreamOverlay(cameraConf) {
     const descriptor = document.createElement("div");
     descriptor.id = "streamOverlayDescriptor";
     descriptor.textContent = `Přehrávání živého videa z kamery: "${cameraConf.title}"`;
+    descriptor.classList.add("overlay-item");
 
     // Video container
     const videoContainer = document.createElement("div");
     videoContainer.id = "streamOverlayVideoContainer";
-    videoContainer.appendChild(createStreamContainer(cameraConf, false));
+    videoContainer.appendChild(createStreamContainer(cameraConf, false, false));
 
     // Compose overlay
-    overlay.appendChild(header);
-    overlay.appendChild(descriptor);
-    overlay.appendChild(videoContainer);
+    overlayContainer.appendChild(topSpacer);
+    overlayContainer.appendChild(header);
+    overlayContainer.appendChild(descriptor);
+    overlayContainer.appendChild(videoContainer);
+    overlayContainer.appendChild(botSpacer);
 
-    overlayContainer.appendChild(overlay);
+    const footerSpacer = document.createElement("div");
+    footerSpacer.classList.add("flex-spacer");
+    overlayContainer.appendChild(footerSpacer);
 
     // Append overlay to the document body
     document.body.appendChild(overlayContainer);

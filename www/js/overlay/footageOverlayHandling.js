@@ -1,5 +1,6 @@
 import { createStoredVideo } from "../factory/videoFactory.js";
 import { splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
+import { getCurrentDateTimeInWords } from "../utils.js";
 
 export function createFootageOverlay(cameraConfItem, videoPath) {
     // Remove existing overlay if it exists
@@ -27,12 +28,14 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     newFootageOverlayContainer.id = "footageOverlay";
     newFootageOverlayContainer.classList.add("overlay-window");
 
-    // Create overlay container
-    const overlay = document.createElement("div");
-    overlay.id = "footageOverlayContainer";
+    const topSpacer = document.createElement("div");
+    topSpacer.classList.add("overlay-vertical-spacer");
+    const botSpacer = document.createElement("div");
+    botSpacer.classList.add("overlay-vertical-spacer");
 
     const header = document.createElement("div");
     header.id = "footageOverlayHeader";
+    header.classList.add("overlay-item");
 
     const playerTitle = document.createElement("div");
     playerTitle.id = "footageOverlayPlayerTitle";
@@ -58,7 +61,8 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     // Create descriptor
     const descriptor = document.createElement("div");
     descriptor.id = "footageOverlayDescriptor";
-    
+    descriptor.classList.add("overlay-item");
+
     const title = document.createElement("div");
     title.id = "footageOverlayDescriptorTitle";
     title.textContent = `Název kamery: "${cameraConfItem.title}"`;
@@ -89,11 +93,14 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     videoContainer.appendChild(videoElement);
 
     // Append elements to overlay
-    overlay.appendChild(header);
-    overlay.appendChild(descriptor);
-    overlay.appendChild(videoContainer);
+    newFootageOverlayContainer.appendChild(topSpacer);
+    newFootageOverlayContainer.appendChild(header);
+    newFootageOverlayContainer.appendChild(descriptor);
+    newFootageOverlayContainer.appendChild(videoContainer);
 
-    newFootageOverlayContainer.appendChild(overlay);
+    const footerSpacer = document.createElement("div");
+    footerSpacer.classList.add("flex-spacer");
+    newFootageOverlayContainer.appendChild(footerSpacer);
 
     // Append overlay to the document body
     document.body.appendChild(newFootageOverlayContainer);

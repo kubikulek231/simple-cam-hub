@@ -2,6 +2,7 @@ import { fetchVideoList, splitVideoFilename, getDayAndMonthNames } from "../load
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
+import { getCurrentDateTimeInWords } from "../utils.js";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -30,14 +31,24 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     // Create UI elements
     let browserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
     const browserHeader = createBrowserHeader();
+    browserHeader.classList.add("overlay-item");
     let browserFooter = createBrowserFooter(pageNum, pageTotalNum);
     const browserDescriptor = createBrowserDescriptor(cameraConf);
+    browserDescriptor.classList.add("overlay-item");
+
+    const topSpacer = document.createElement("div");
+    topSpacer.classList.add("overlay-vertical-spacer");
+    const botSpacer = document.createElement("div");
+    botSpacer.classList.add("overlay-vertical-spacer");
+
+    const footerSpacer = document.createElement("div");
+    footerSpacer.classList.add("flex-spacer");
 
     // Create overlay
     const browserOverlay = document.createElement("div");
     browserOverlay.id = "browserOverlay";
     browserOverlay.classList.add("overlay-window");
-    browserOverlay.append(browserHeader, browserDescriptor, browserTable, browserFooter);
+    browserOverlay.append(topSpacer, browserHeader, browserDescriptor, browserTable, browserFooter, botSpacer, footerSpacer);
 
     // Add event delegation for button clicks
     browserOverlay.addEventListener("click", (event) => {
@@ -58,7 +69,6 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
         
         // Recalculate paginated list and update table/footer
         videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
-        console.log("pageNum", pageNum);
         const newBrowserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
         const newBrowserFooter = createBrowserFooter(pageNum, pageTotalNum);
 
@@ -71,25 +81,6 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     return browserOverlay;
 }
 
-
-function getCurrentDateTimeInWords() {
-    const now = new Date();
-
-    // Use Intl.DateTimeFormat with default browser locale
-    const dayName = new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(now); // e.g., "Monday"
-    const monthName = new Intl.DateTimeFormat(undefined, { month: 'long' }).format(now); // e.g., "October"
-    const day = now.getDate(); // e.g., 6
-    const year = now.getFullYear(); // e.g., 2024
-
-    // Get time components and format them
-    const hours = now.getHours();
-    const minutes = now.getMinutes().toString().padStart(2, '0'); 
-    
-    // Construct the final string in words
-    const dateInWords = `${dayName}, ${monthName} ${day}, ${year}`;
-
-    return dateInWords + ", " + hours + ":" + minutes;
-}
 
 function paginateItems(items, itemsPerPage, pageNumber) {
     // Calculate the starting index
@@ -104,9 +95,6 @@ function paginateItems(items, itemsPerPage, pageNumber) {
 }
 
 export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
-    console.log("pageNum", pageNum);
-    console.log("paginatedVideoList", paginatedVideoList);
-    console.log("cameraConf", cameraConf);
     const element = document.createElement("div");
     element.id = "browserTable";
 
@@ -164,7 +152,6 @@ function createTableRow(rowData, videoPath, cameraConf) {
 
     button.addEventListener("click", function() {
         createFootageOverlay(cameraConf, videoPath);
-        console.log("showing footage overlay for: ", videoPath);
     });
 
     // Create a new cell and append the button to it
@@ -198,7 +185,7 @@ function createBrowserFooter(pageNum, pageTotalNum) {
     // Create the container div
     const container = document.createElement('div');
     container.id = 'browserOverlayPageContainer';
-    container.classList.add('browser-overlay');
+    container.classList.add('overlay-item');
 
     // Create the previous page button
     const prevButton = document.createElement('button');
@@ -209,7 +196,6 @@ function createBrowserFooter(pageNum, pageTotalNum) {
     // Create the page number container
     const pageNumContainer = document.createElement('div');
     pageNumContainer.id = 'browserPageNum';
-    pageNumContainer.classList.add('browser-overlay');
     pageNumContainer.textContent = `Strana ${pageNum} z ${pageTotalNum}`;
 
     // Create the next page button
@@ -239,18 +225,15 @@ function createBrowserFooter(pageNum, pageTotalNum) {
     return container;
 }
 
-
 // Function to create the header container
 function createBrowserHeader() {
     // Create the header container div
     const headerContainer = document.createElement('div');
     headerContainer.id = 'browserOverlayHeader';
-    headerContainer.classList.add('browser-overlay');
 
     // Create the title div
     const titleDiv = document.createElement('div');
     titleDiv.id = 'browserOverlayTitle';
-    titleDiv.classList.add('browser-overlay');
     titleDiv.textContent = '📂Prohlížeč záznamů';
 
     // Create the close button
@@ -277,17 +260,14 @@ function createBrowserDescriptor(cameraConf) {
     // Create the descriptor container div
     const descriptorContainer = document.createElement('div');
     descriptorContainer.id = 'browserOverlayDescriptorContainer';
-    descriptorContainer.classList.add('browser-overlay');
 
     // Create the descriptor div
     const descriptorDiv = document.createElement('div');
     descriptorDiv.id = 'browserOverlayDescriptor';
-    descriptorDiv.classList.add('browser-overlay');
 
     // Create the date-time div
     const dateTimeDiv = document.createElement('div');
     dateTimeDiv.id = 'browserOverlayDateTime';
-    dateTimeDiv.classList.add('browser-overlay');
 
     // Create another flex-spacer div
     const flexSpacer2 = document.createElement('div');
@@ -299,13 +279,12 @@ function createBrowserDescriptor(cameraConf) {
 
     // Function to update the current date and time every second
     function updateDateTime() {
-        dateTimeDiv.textContent = "Dnes je: " + getCurrentDateTimeInWords();
+        dateTimeDiv.textContent = "Dnes je " + getCurrentDateTimeInWords();
     }
 
     // Update the time every second
     setInterval(updateDateTime, 1000); // 1000 ms = 1 second
     updateDateTime(); // Initial call to display the time immediately without waiting 1 second
-
 
     // Append descriptor, spacer, and date-time to the descriptor container
     descriptorContainer.appendChild(descriptorDiv);

@@ -51,27 +51,31 @@ function createStreamControls() {
 }
 
 // Main function to create the stream container (like createStoredVideo in videoFactory.js)
-export function createStreamContainer(cameraConf, showControls = true) {
+export function createStreamContainer(cameraConf, showControls = true, showTitle = true) {
+    // Create the main container for the stream
     const streamContainer = document.createElement('div');
     streamContainer.classList.add("stream-container");
     streamContainer.setAttribute("camera-id", cameraConf.id);
 
-    // Title (like video title/header)
-    const streamTitle = document.createElement('div');
-    streamTitle.classList.add("stream-title");
-    streamTitle.textContent = cameraConf.title;
-
-    // Video wrapper (like videoWrapper in videoFactory.js)
+    // Video wrapper
     const streamWrapper = document.createElement('div');
     streamWrapper.classList.add("stream-wrapper-outer");
 
-    // Video element (like createVideoElement)
     const liveVideo = createLiveVideoElement(cameraConf.source, false);
 
     // Compose the structure
     streamWrapper.appendChild(liveVideo);
-    streamContainer.appendChild(streamTitle);
+    if (showTitle) {
+        const streamTitle = document.createElement('div');
+        streamTitle.classList.add("stream-title");
+        streamTitle.textContent = cameraConf.title;
+        streamContainer.appendChild(streamTitle);
+    }
     streamContainer.appendChild(streamWrapper);
+
+    const flexSpacer = document.createElement('div');
+    flexSpacer.classList.add('flex-spacer');
+    streamContainer.appendChild(flexSpacer);
     
     // Controls
     if (showControls) {

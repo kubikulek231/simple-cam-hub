@@ -1,50 +1,15 @@
 /* CSS styles for playing stored footage */
 
-#footageOverlayContainer {
-    width: 100%;
-}
-
-#footageOverlayContentWrapper {
-    position: fixed;
-
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 5px;
-
-    padding-top: 10px;
-    min-height: 200px;
-    min-width: 200px;
-
-    width: fit-content;
-    height: 98%;
-
-    /* Centering */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    z-index: 11;
-
-    background-color: black;
-}
-
 #footageOverlayHeader {
     display: flex;
     flex-direction: row;
-    color: white;
-    width: 90%;
-    margin: auto;
+    gap: 10px;
 }
 
 #footageOverlayDescriptor {
     display: flex;
     flex-direction: row;
-    width: 90%;
     gap: 10px;
-    margin: auto;
 }
 
 #footageOverlayPlayerTitle {
@@ -62,14 +27,12 @@
 }
 
 #footageOverlayVideoContainer {
-    display: flex;
-    flex-direction: column;
     width: auto;         
     height: auto;        
     width: fit-content;      
-    height: 95%;     
     box-sizing: border-box; 
     overflow: hidden;  
+    align-self: center;
     align-items: center;  
 }
 
@@ -87,10 +50,6 @@
 #footageOverlayVideoContainer .video-wrapper {
     height: 90%;
     align-self: center;
-    width: fit-content;
-}
-
-#footageOverlayVideoContainer video {
     width: fit-content;
 }
 
