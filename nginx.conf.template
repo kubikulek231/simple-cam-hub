@@ -61,9 +61,10 @@ server {
     location /footage/ {
         alias /home/PLACEHOLDER_USER/footage/;  # Ensure this matches the symbolic link
         autoindex on;                    # Enable directory listing
-		types {
-        video/mp4 mp4;
-    	}
+        add_header 'Access-Control-Allow-Origin' '*';
+        types {
+            video/mp4 mp4;
+        }
     }
     location /css/ {
         alias /var/www/html/css/;  # Path to your CSS files
@@ -77,22 +78,6 @@ server {
         types {
             application/javascript js;
         }
-    }
-
-    location /footage/cam1/ {
-        add_header 'Access-Control-Allow-Origin' '*';
-        # proxy_pass or alias if needed
-        # ...other settings if required...
-    }
-    location /footage/cam2/ {
-        add_header 'Access-Control-Allow-Origin' '*';
-        # proxy_pass or alias if needed
-        # ...other settings if required...
-    }
-    location /footage/cam3/ {
-        add_header 'Access-Control-Allow-Origin' '*';
-        # proxy_pass or alias if needed
-        # ...other settings if required...
     }
 
 }
