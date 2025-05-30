@@ -3,32 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Streams</title>
+    <title>Kamery</title>
+    
     <script src="js/library/hls/hls.js"></script>
-    <link rel="stylesheet" href="css/main.css"> <!-- Link to the CSS file -->
-    <script type="module" src="js/main.js"></script><!-- Link to the JavaScript file -->
+    <link rel="stylesheet" href="css/main.css">
+    <script type="module" src="js/main.js"></script>
 </head>
 <body>
     <div class="container">
         <div id="streamsTitle"> 🎥Prohlížeč kamerových záznamů</div>
         <div id="videoContainer"></div>
     </div>
-
-    <div id="streamOverlayContainer" class="stream-overlay" hidden>
-        <div class="blocker-overlay stream-overlay" hidden></div>
-        <div id="streamOverlayContentWrapper" class="stream-overlay">
-            <div id="streamOverlayHeader" class="stream-overlay" hidden>
-                <div id="streamOverlayTitle" class="stream-overlay" hidden>🔎Zvětšený režim</div>
-                <div class="flex-spacer"></div>
-                <button id="exitStreamOverlayButton" class="button button-close">✖ ZAVŘÍT</button>
-            </div>
-            <div id="streamOverlayDescriptorContainer" class="stream-overlay" hidden>
-                <div id="streamOverlayDescriptor" class="stream-overlay" hidden>Přehrávání živého videa z:</div>
-                <div class="flex-spacer"></div>
-            </div>
-            <div id="streamOverlayVideoContainer" class="stream-overlay" hidden></div>
-        </div>
-    </div>
-
 </body>
 </html>

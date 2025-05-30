@@ -1,9 +1,7 @@
-// TODO: fix a bug where the browsing does not get updated when opening different cam footage
-
 import { fetchVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
-import { resumeAllStreams, pauseAllStreams } from "../streamContainerHandling.js";
+import { resumeAllStreams, pauseAllStreams } from "../utils.js";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -16,6 +14,8 @@ export function handleBrowserOverlay() {
             const currentCamConf = loadedCameraConfList[cameraID];
             const browserOverlay = await createBrowserOverlay(currentCamConf, ITEMS_PER_PAGE, 1);
             document.body.appendChild(browserOverlay);
+            document.body.classList.add('overlay-open');
+            pauseAllStreams();
         });
     });
 }
@@ -36,12 +36,15 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     // Create overlay
     const browserOverlay = document.createElement("div");
     browserOverlay.id = "browserOverlay";
+    browserOverlay.classList.add("overlay-window");
     browserOverlay.append(browserHeader, browserDescriptor, browserTable, browserFooter);
 
     // Add event delegation for button clicks
     browserOverlay.addEventListener("click", (event) => {
         if (event.target.id === "exitBrowserOverlayButton") {
             browserOverlay.remove();
+            document.body.classList.remove('overlay-open');
+            resumeAllStreams();
             return;
         } 
         

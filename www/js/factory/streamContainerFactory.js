@@ -1,56 +1,84 @@
-import { createStreamedVideo } from "./videoFactory.js";
+// Create the video element and its wrapper (like createVideoElement + wrapper in videoFactory.js)
+function createLiveVideoElement(videoSource, controls = true) {
+    const video = document.createElement('video');
+    video.controls = controls;
+    video.muted = true;
+    video.autoplay = true;
 
-// Function to create controls and append to video wrapper
-function createStreamContainerControls() {
-    // Create controls container
-    const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'stream-controls-container';
+    if (videoSource.endsWith('.m3u8') && Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(videoSource);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.ERROR, (event, data) => {
+            console.error('HLS.js error:', data);
+        });
+    } else {
+        video.src = videoSource;
+    }
 
-    const button1 = document.createElement('button'); // Create a button element
-    button1.classList = 'button button-open-stream-overlay'; // Set class names
-    button1.textContent = 'ZVĚTŠIT🔎'; // Set text content
+    video.addEventListener('error', (event) => {
+        console.error('Error loading video:', event);
+    });
 
-    const button2 = document.createElement('button'); // Create another button element
-    button2.classList = 'button button-open-browser-overlay'; // Set class names
-    button2.textContent = 'PROJÍT ZÁZNAMY📁'; // Set text content
+    const streamWrapper = document.createElement('div');
+    streamWrapper.classList.add("stream-wrapper");
+    streamWrapper.appendChild(video);
 
+    return streamWrapper;
+}
+
+// Create controls container (like createCustomControls in videoFactory.js)
+function createStreamControls() {
+    const controls = document.createElement('div');
+    controls.classList.add('stream-controls-container');
+
+    const enlargeButton = document.createElement('button');
+    enlargeButton.classList.add('button', 'button-open-stream-overlay');
+    enlargeButton.textContent = 'ZVĚTŠIT🔎';
+
+    const browseButton = document.createElement('button');
+    browseButton.classList.add('button', 'button-open-browser-overlay');
+    browseButton.textContent = 'PROJÍT ZÁZNAMY📁';
+
+    // Optional: add a flex spacer for layout consistency
     const flexSpacer = document.createElement("div");
     flexSpacer.classList.add("flex-spacer");
 
-    // Append buttons to the controls container
-    controlsContainer.appendChild(button1);
-    // controlsContainer.appendChild(flexSpacer);
-    controlsContainer.appendChild(button2);
-    return controlsContainer;
+    controls.appendChild(enlargeButton);
+    controls.appendChild(browseButton);
+
+    return controls;
 }
 
-// Function to create controls and append to video wrapper
-export function createStreamContainer(cameraConf) {
-    // Create stream container
+// Main function to create the stream container (like createStoredVideo in videoFactory.js)
+export function createStreamContainer(cameraConf, showControls = true) {
     const streamContainer = document.createElement('div');
-    streamContainer.classList = "stream-container";
+    streamContainer.classList.add("stream-container");
     streamContainer.setAttribute("camera-id", cameraConf.id);
 
-    // Create stream cam title
-    const streamContainerTitle = document.createElement('div');
-    streamContainerTitle.classList = "stream-title";
-    streamContainerTitle.textContent = cameraConf.title;
+    // Title (like video title/header)
+    const streamTitle = document.createElement('div');
+    streamTitle.classList.add("stream-title");
+    streamTitle.textContent = cameraConf.title;
 
-    // Create video wrapper
-    const streamedVideoWrapper = document.createElement('div');
-    streamedVideoWrapper.classList = "stream-container-video-wrapper";
+    // Video wrapper (like videoWrapper in videoFactory.js)
+    const streamWrapper = document.createElement('div');
+    streamWrapper.classList.add("stream-wrapper-outer");
 
-    // Create streamed video element
-    const streamedVideo = createStreamedVideo(cameraConf.source, false);
+    // Video element (like createVideoElement)
+    const liveVideo = createLiveVideoElement(cameraConf.source, false);
 
-    // Create stream container controls
-    const streamContainerControls = createStreamContainerControls();
-
-    // Append all to streamContainer
-    streamContainer.appendChild(streamContainerTitle);
-    streamedVideoWrapper.appendChild(streamedVideo);
-    streamContainer.appendChild(streamedVideoWrapper);
-    streamContainer.appendChild(streamContainerControls);
+    // Compose the structure
+    streamWrapper.appendChild(liveVideo);
+    streamContainer.appendChild(streamTitle);
+    streamContainer.appendChild(streamWrapper);
+    
+    // Controls
+    if (showControls) {
+        const streamControls = createStreamControls();
+        streamContainer.appendChild(streamControls);
+    }
+    
 
     return streamContainer;
 }

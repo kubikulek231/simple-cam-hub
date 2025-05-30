@@ -1,3 +1,5 @@
+import { createFlexSpacer } from "../utils.js";
+
 export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     const video = createVideoElement(videoSource, videoType);
     const controls = createCustomControls(video, videoSource);
@@ -182,28 +184,4 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = Math.floor(seconds % 60);
     return `${hours > 0 ? hours + ':' : ''}${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  }
-  
-  export function createStreamedVideo(videoSource, controls = true) {
-    const video = document.createElement('video');
-    video.controls = controls;
-    video.muted = true;
-    video.src = videoSource;
-    video.autoplay = true;
-  
-    video.addEventListener('error', (event) => {
-      console.error('Error loading video:', event);
-    });
-  
-    const videoWrapper = document.createElement('div');
-    videoWrapper.classList.add("video-wrapper");
-    videoWrapper.appendChild(video);
-  
-    return videoWrapper;
-  }
-  
-  export function createFlexSpacer() {
-    const flexboxSpacer = document.createElement('div');
-    flexboxSpacer.className="flex-spacer";
-    return flexboxSpacer;
   }

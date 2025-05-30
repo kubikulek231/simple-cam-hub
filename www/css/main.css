@@ -1,7 +1,9 @@
+/* CSS imports */
+
 @import url('./base.css');
-@import url('./streamContainer.css');
+@import url('./home.css');
+@import url('./video.css');
 @import url('./overlay/stream.css');
 @import url('./overlay/browser.css');
 @import url('./overlay/footage.css');
 @import url('./overlay/common.css');
-@import url('./video.css');

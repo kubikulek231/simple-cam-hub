@@ -1,3 +1,6 @@
+/* CSS styles for common video containers, controls etc. */
+/* Used in overlays and even homepage. */
+
 .progress-wrapper {
     position: relative;
     width: 100%;

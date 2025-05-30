@@ -1,3 +1,5 @@
+/* Base CSS styles for common elements like buttons etc. */
+
 html, body {
     position: relative;
     margin: 0; /* Remove default margins */

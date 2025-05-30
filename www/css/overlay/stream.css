@@ -1,26 +1,6 @@
-#streamOverlayContentWrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    width: 100%;
-    padding: 7px;
-    padding-top: 15px;
+/* CSS styles for viewing current camera stream */
 
-    position: fixed;
-
-    width: fit-content;
-    height: 96%;
-
-    /* Centering */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: auto;
-    z-index: 11;
-
-    background-color: black;
+#streamOverlayContainer {
 }
 
 #streamOverlayHeader {
@@ -37,14 +17,6 @@
 
 #streamOverlayDescriptor {
     flex: 0 1 auto;
-}
-
-#streamOverlayContainer {
-    flex: 1 1 auto;
-}
-
-#streamOverlayContainer video {
-    width: fit-content;
 }
 
 #streamOverlayButtonContainer {

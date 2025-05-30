@@ -1,21 +1,9 @@
 import { createStoredVideo } from "../factory/videoFactory.js";
 import { splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 
-export function hideFootageOverlay() {
-    const footageOverlayElements = document.getElementsByClassName("footage-overlay");
-
-    Array.from(footageOverlayElements).forEach(element => {
-        element.setAttribute('hidden', 'true'); // Hide the element
-    });
-    const videoContainerElement = document.getElementById("footageOverlayVideoContainer");
-    while (videoContainerElement.firstChild) {
-        videoContainerElement.removeChild(videoContainerElement.firstChild);
-    }
-}
-
 export function createFootageOverlay(cameraConfItem, videoPath) {
     // Remove existing overlay if it exists
-    const existingOverlay = document.getElementById("footageOverlayContainer");
+    const existingOverlay = document.getElementById("footageOverlay");
     if (existingOverlay) {
         existingOverlay.remove();
     }
@@ -36,13 +24,12 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     const time = `${splitVideoName.hour}:${minutes}`;
 
     const newFootageOverlayContainer = document.createElement("div");
-    newFootageOverlayContainer.id = "footageOverlayContainer";
-    newFootageOverlayContainer.className = "footage-overlay";
+    newFootageOverlayContainer.id = "footageOverlay";
+    newFootageOverlayContainer.classList.add("overlay-window");
 
     // Create overlay container
     const overlay = document.createElement("div");
-    overlay.id = "footageOverlay";
-    overlay.classList.add("footage-overlay");
+    overlay.id = "footageOverlayContainer";
 
     const header = document.createElement("div");
     header.id = "footageOverlayHeader";
@@ -62,7 +49,10 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     closeButton.id = "closeFootageOverlay";
     closeButton.className = "button-close";
     closeButton.textContent = "✖ ZAVŘÍT";
-    closeButton.addEventListener("click", () => newFootageOverlayContainer.remove());
+    closeButton.addEventListener("click", () => {
+        newFootageOverlayContainer.remove();
+        document.body.classList.remove('overlay-open');
+    });
     header.appendChild(closeButton);
 
     // Create descriptor
@@ -107,4 +97,5 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
 
     // Append overlay to the document body
     document.body.appendChild(newFootageOverlayContainer);
+    document.body.classList.add('overlay-open');
 }

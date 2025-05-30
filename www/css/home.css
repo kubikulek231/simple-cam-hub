@@ -1,3 +1,5 @@
+/* CSS styles for camera home page */
+
 #videoContainer {
     display: flex; /* Use flex to arrange video wrappers */
     flex-direction: row;
