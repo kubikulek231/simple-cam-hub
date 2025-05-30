@@ -24,6 +24,8 @@ events {
 }
 
 http {
+    add_header 'Access-Control-Allow-Origin' '*';  # Global CORS for all responses
+
 server {
 	listen 80 default_server;
 	listen [::]:80 default_server;
@@ -53,6 +55,7 @@ server {
 	server_name _;
 
 	location / {
+		add_header 'Access-Control-Allow-Origin' '*';
 		# First attempt to serve request as file, then
 		# as directory, then fall back to displaying a 404.
 		try_files $uri $uri/ =404;
@@ -68,6 +71,7 @@ server {
     }
     location /css/ {
         alias /var/www/html/css/;  # Path to your CSS files
+        add_header 'Access-Control-Allow-Origin' '*';
         types {
             text/css css;
         }
@@ -75,6 +79,7 @@ server {
 
     location /js/ {
         alias /var/www/html/js/;  # Path to your JS files
+        add_header 'Access-Control-Allow-Origin' '*';
         types {
             application/javascript js;
         }
