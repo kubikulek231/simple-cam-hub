@@ -1,4 +1,3 @@
-// TODO: Fix the automatic video playback and the buttons enabling when it finishes etc.
 export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     const video = createVideoElement(videoSource, videoType);
     const controls = createCustomControls(video, videoSource);
@@ -13,7 +12,7 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     const videoFinishedHeader = document.createElement('div');
     videoFinishedHeader.classList.add("video-finished-header");
     videoFinishedOverlay.classList.add("video-finished-overlay");
-    videoFinishedHeader.textContent = "Video bylo přehráno!";
+    videoFinishedHeader.textContent = "Záznam přehrán!";
     videoFinishedOverlay.style.display = "none";
 
     video.addEventListener('ended', () => {

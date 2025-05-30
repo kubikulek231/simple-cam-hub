@@ -1,4 +1,3 @@
-import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createStoredVideo } from "../factory/videoFactory.js";
 import { splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
 
@@ -62,7 +61,7 @@ export function createFootageOverlay(cameraConfItem, videoPath) {
     const closeButton = document.createElement("button");
     closeButton.id = "closeFootageOverlay";
     closeButton.className = "button-close";
-    closeButton.textContent = "Zavřít";
+    closeButton.textContent = "✖ ZAVŘÍT";
     closeButton.addEventListener("click", () => newFootageOverlayContainer.remove());
     header.appendChild(closeButton);
 
