@@ -58,7 +58,7 @@ sudo mkdir -p $TARGET_DIR
 
 # Copy local directory to target directory
 echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
-sudo cp -r $LOCAL_DIR/* $TARGET_DIR/
+sudo cp -rf $LOCAL_DIR/* $TARGET_DIR/
 
 # Set ownership to www-data for the web root directory
 echo "Setting permissions for $TARGET_DIR ..."
