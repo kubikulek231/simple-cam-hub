@@ -1,7 +1,8 @@
 #!/bin/bash
 LOCAL_DIR=~/simple-cam-hub/www         # Path to your local directory
 TARGET_DIR=/var/www/html               # Target directory on the server
-USER=kubikulek231                      # Your username if using sudo
+DEVELOPMENT_USER=kubikulek231          # Your username if using sudo
+PUBLISH_USER=raspberrypi5
 SCRIPTS_DIR=~/simple-cam-hub/scripts
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_FOOTAGE_CAMS=(cam1 cam2 cam3)
@@ -12,7 +13,13 @@ NGINX_TEMPLATE_PATH=~/simple-cam-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
 CUSTOM_NGINX_CONF_PATH="/tmp/custom_nginx.conf"
-DEVELOPMENT=1   # Set to 1 for development mode, 0 for production
+DEVELOPMENT=1   # Default to development mode
+
+# Auto-detect if running as publish user
+if [ "$USER" = "$PUBLISH_USER" ]; then
+    DEVELOPMENT=0
+fi
+
 SERVICES=(ffmpeg_download.service ffmpeg_hls.service)
 
 # Function to check and update services
