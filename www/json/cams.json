@@ -3,19 +3,19 @@
       {
           "id": 0,
           "title": "Stodola",
-          "source": "http://192.168.88.249/cam1/index.m3u8",
+          "source": "/cam1/index.m3u8",
           "footageDirectory": "/footage/cam1"
       },
       {
           "id": 1,
           "title": "Cesta",
-          "source": "http://192.168.1.249/cam2/index.m3u8",
+          "source": "/cam2/index.m3u8",
           "footageDirectory": "/footage/cam2"
       },
       {
           "id": 2,
           "title": "Terasa",
-          "source": "http://192.168.1.249/cam3/index.m3u8",
+          "source": "/cam3/index.m3u8",
           "footageDirectory": "/footage/cam3"
       }
   ]
