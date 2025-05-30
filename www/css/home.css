@@ -25,7 +25,7 @@
 }
 
 @media (max-width: 800px) {
-    .stream-container {
+    #videoContainer > .stream-container {
         flex: 1 1 100%; /* On smaller screens, make the containers take up the full width */
         max-width: 100%;
     }
