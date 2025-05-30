@@ -1,6 +1,28 @@
 /* CSS styles for viewing current camera stream */
 
 #streamOverlayContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#streamOverlayVideoContainer > .stream-container {
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 #streamOverlayHeader {
@@ -9,6 +31,7 @@
     display: flex;
     flex-direction: row;
     gap: 10px;
+    box-sizing: border-box;
 }
 
 #streamOverlayTitle {
@@ -17,6 +40,7 @@
 
 #streamOverlayDescriptor {
     flex: 0 1 auto;
+    box-sizing: border-box;
 }
 
 #streamOverlayButtonContainer {
@@ -33,13 +57,31 @@
     display: flex;
     flex-direction: row;
     width: 90%;
+    box-sizing: border-box;
 }
 
 #streamOverlayVideoContainer {
-    width: fit-content;
-    /* Centering */
+    width: 100%;
+    height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
     flex: 1 1 auto;
-    height: 85%;
     align-self: center;
-    width: fit-content;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#streamOverlayVideoContainer video,
+#streamOverlayVideoContainer .video-wrapper,
+#streamOverlayVideoContainer .video-container {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    box-sizing: border-box;
+    overflow: hidden;
 }

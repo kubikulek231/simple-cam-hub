@@ -1,6 +1,7 @@
 /* CSS styles for playing stored footage */
 
 #footageOverlayContainer {
+    width: 100%;
 }
 
 #footageOverlayContentWrapper {

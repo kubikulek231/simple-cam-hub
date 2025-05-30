@@ -11,7 +11,7 @@
     gap: 10px; /* Space between the stream containers */
 }
 
-.stream-container {
+#videoContainer > .stream-container {
     background-color: rgb(0, 0, 0); /* Just for visibility */
     display: flex; /* Use flex to arrange items */
     flex-direction: column; /* Stack items vertically */
