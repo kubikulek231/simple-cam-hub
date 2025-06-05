@@ -1,53 +1,60 @@
 #!/bin/bash
 LOCAL_DIR=~/simple-cam-hub/www         # Path to your local directory
 TARGET_DIR=/var/www/html               # Target directory on the server
-DEVELOPMENT_USER=kubikulek231          # Your username if using sudo
-PUBLISH_USER=raspberrypi5
-SCRIPTS_DIR=~/simple-cam-hub/scripts
+
+DEVELOPMENT_USER=kubikulek231          # Development user
+PUBLISH_USER=raspberrypi5			   # Publish/target user
+
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_FOOTAGE_CAMS=(cam1 cam2 cam3)
 CCTV_FOOTAGE_DOWNLOAD_URL="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h265/1080/Big_Buck_Bunny_1080_10s_10MB.mp4"
 CCTV_WWW_DIR=/var/www/html/footage
 CCTV_SEED_FOOTAGE_SCRIPT=~/simple-cam-hub/deploy_scripts/seed_footage
+
 NGINX_TEMPLATE_PATH=~/simple-cam-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
-CUSTOM_NGINX_CONF_PATH="/tmp/custom_nginx.conf"
-DEVELOPMENT=1   # Default to development mode
 
-# Auto-detect if running as publish user
+SERVICE_CC_CAM1_PATH=~/simple-cam-hub/cam_capture/cc_cam1.service
+SERVICE_CC_CAM2_PATH=~/simple-cam-hub/cam_capture/cc_cam2.service
+SERVICE_CC_CAM3_PATH=~/simple-cam-hub/cam_capture/cc_cam3.service
+SERVICE_F_CLEANUP_PATH=~/simple-cam-hub/footage_cleanup/f_cleanup.service
+
+# Determine if running as publish user or development user
+DEVELOPMENT=1
 if [ "$USER" = "$PUBLISH_USER" ]; then
     DEVELOPMENT=0
 fi
 
-SERVICES=(ffmpeg_download.service ffmpeg_hls.service)
+# List of service files and their target names (extract filename only for systemctl)
+declare -A SERVICES=(
+    ["cc_cam1.service"]="$SERVICE_CC_CAM1_PATH"
+    ["cc_cam2.service"]="$SERVICE_CC_CAM2_PATH"
+    ["cc_cam3.service"]="$SERVICE_CC_CAM3_PATH"
+    ["f_cleanup.service"]="$SERVICE_F_CLEANUP_PATH"
+)
 
-# Function to check and update services
+# Function to update systemd service files, reload and restart
 update_service() {
     local service_name=$1
-    local local_service_file="$SCRIPTS_DIR/$service_name"
+    local local_service_file=$2
     local system_service_file="/etc/systemd/system/$service_name"
 
-    if ! sudo diff -q "$local_service_file" "$system_service_file" > /dev/null 2>&1; then
-        echo "Updating systemd $service_name ..."
-        sudo cp "$local_service_file" "$system_service_file"
-        sudo systemctl daemon-reload
-        sudo systemctl restart "$service_name"
-        sudo systemctl enable "$service_name"
-    else
-        echo "$service_name is up to date, no changes needed."
-    fi
+    echo "Updating systemd service: $service_name ..."
+    sudo cp "$local_service_file" "$system_service_file"
+    sudo systemctl daemon-reload
+    sudo systemctl restart "$service_name"
+    sudo systemctl enable "$service_name"
 }
 
 if [ "$DEVELOPMENT" -eq 0 ]; then
-    # Install or update services (production only)
-    for service in "${SERVICES[@]}"; do
-        update_service "$service"
+    # Production: update all services
+    for svc_name in "${!SERVICES[@]}"; do
+        update_service "$svc_name" "${SERVICES[$svc_name]}"
     done
 else
     echo "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
 fi
-
 # Remove the target directory
 echo "Removing $TARGET_DIR ..."
 sudo rm -rf $TARGET_DIR
@@ -73,13 +80,15 @@ echo "Create www-data group and add www-data user to it ..."
 sudo groupadd www-data || true
 sudo usermod -aG www-data www-data
 
+NGINX_TMP_CUSTOM_CONF_PATH="/tmp/custom_nginx.conf"
+
 # Set the new nginx conf
 echo "Checking for NGINX configuration changes ..."
-sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$CUSTOM_NGINX_CONF_PATH"
+sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$NGINX_TMP_CUSTOM_CONF_PATH"
 
-if ! sudo diff -q "$CUSTOM_NGINX_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH" > /dev/null 2>&1; then
+if ! sudo diff -q "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH" > /dev/null 2>&1; then
     echo "Updating NGINX configuration ..."
-    sudo cp "$CUSTOM_NGINX_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
+    sudo cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
 
     echo "Checking the new conf file ..."
     if sudo nginx -t; then

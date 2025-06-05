@@ -6,7 +6,7 @@ CCTV_FOOTAGE_CAMS=("cam1" "cam2" "cam3")
 CCTV_FOOTAGE_DOWNLOAD_URL="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h265/1080/Big_Buck_Bunny_1080_10s_10MB.mp4"
 CCTV_FOOTAGE_FILE_NUMBER=20  # Number of sample files to create per camera
 CCTV_FOOTAGE_FILE_EXT="mp4"  # File extension for the sample footage
-CCTV_GENERATE_FILENAME_SCRIPT=~/simple-cam-hub/deploy_scripts/generate_filename
+CCTV_GENERATE_FILENAME_SCRIPT=~/simple-cctv-hub/deploy_scripts/generate_filename.sh
 
 # Create camera directories and footage if they don't exist
 if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then

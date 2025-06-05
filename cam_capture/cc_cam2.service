@@ -1,0 +1,17 @@
+[unit]
+Description=CAM2 Capture and Stream Service
+After=multi-user.target
+
+[Service]
+Type=idle
+ExecStart=/home/raspberrypi5/simple-cctv-hub/cam_capture/cc_cam2.sh
+User=raspberrypi5
+Restart=always
+RuntimeMaxSec=1d
+RestartSec=20
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

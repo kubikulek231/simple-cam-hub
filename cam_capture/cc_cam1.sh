@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# === OVERVIEW ===
+# This script handles downloading and streaming footage from CAM1
+
+# === CONFIGURATION ===
+RTSP_SUB="rtsp://admin:Hovnokleslo123.@192.168.88.247:554/12"   # Lower-res stream for live view
+RTSP_MAIN="rtsp://admin:Hovnokleslo123.@192.168.88.247:554/11"  # Full-res stream for recording
+
+TMP_DIR="/tmp/cam1_gstream_chunks"             # Temporary location for FIFOs and buffers
+OUTPUT_DIR="/var/www/html/cam1"                # HLS output directory (served via web)
+RECORD_DIR="/home/raspberrypi5/footage/cam1"   # Long-term MKV recordings directory
+HLS_SEGMENT_TIME=5                             # HLS segment duration in seconds
+RECORD_SEGMENT_TIME=3600                       # Recording segment duration in seconds
+
+# === SETUP ===
+echo "[Init] Cleaning up old files and preparing directories..."
+rm -rf "$OUTPUT_DIR"/*
+rm -rf "$TMP_DIR"
+mkdir -p "$OUTPUT_DIR" "$TMP_DIR" "$RECORD_DIR"
+
+# Create named pipes (FIFOs) for FFmpeg to read from
+mkfifo "$TMP_DIR/stream_live.ts"
+mkfifo "$TMP_DIR/stream_record.ts"
+
+# === START GSTREAMER: SUB Stream for Live View ===
+# This pipeline pulls the sub stream (lower res) and writes it into a FIFO.
+# FFmpeg will pick it up and segment it into HLS for web playback.
+echo "[GStreamer] Starting SUB stream for live HLS..."
+gst-launch-1.0 -e rtspsrc location="$RTSP_SUB" latency=100 ! \
+  rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_live.ts" &
+
+GST_LIVE_PID=$!
+
+# === START GSTREAMER: MAIN Stream for Recording ===
+# This pipeline pulls the main stream (high res) and writes it into a second FIFO.
+# FFmpeg will segment this into 1-hour MKV files with timestamped filenames.
+echo "[GStreamer] Starting MAIN stream for recording..."
+gst-launch-1.0 -e rtspsrc location="$RTSP_MAIN" latency=100 ! \
+  rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_record.ts" &
+
+GST_RECORD_PID=$!
+
+sleep 2  # Let GStreamer pipelines warm up
+
+# === START FFMPEG: Live Streaming via HLS ===
+echo "[FFmpeg] Starting HLS live stream with $HLS_SEGMENT_TIME sec segments..."
+ffmpeg -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
+  -hls_time "$HLS_SEGMENT_TIME" -hls_list_size 5 -hls_segment_type fmp4 \
+  -hls_fmp4_init_filename init.mp4 \
+  -hls_segment_filename "$OUTPUT_DIR/segment_%03d.m4s" "$OUTPUT_DIR/index.m3u8" &
+
+FFMPEG_LIVE_PID=$!
+
+# === START FFMPEG: Recording to MKV ===
+echo "[FFmpeg] Starting 1-hour MKV recording with timestamped filenames..."
+ffmpeg -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
+  -segment_time "$RECORD_SEGMENT_TIME" -reset_timestamps 1 -strftime 1 \
+  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mkv" &
+
+FFMPEG_RECORD_PID=$!
+
+
+# === CLEANUP HANDLER ===
+cleanup() {
+  echo "[EXIT] Stopping all processes..."
+  kill $GST_LIVE_PID $GST_RECORD_PID $FFMPEG_LIVE_PID $FFMPEG_RECORD_PID 2>/dev/null
+  wait
+  exit 1
+}
+trap cleanup SIGINT SIGTERM
+
+# === WAIT AND MONITOR ALL BACKGROUND PROCESSES ===
+# Use wait -n to detect if any background process exits early or with error
+while true; do
+  if ! wait -n; then
+    echo "[ERROR] One of the streaming processes exited unexpectedly."
+    cleanup
+  fi
+done
