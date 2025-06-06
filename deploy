@@ -95,15 +95,12 @@ else
 fi
 
 
-# Remove the target directory
-echo "Removing $TARGET_DIR ..."
-sudo rm -rf $TARGET_DIR
+# Remove everything in $TARGET_DIR except cam* directories
+echo "Cleaning $TARGET_DIR except cam* directories ..."
+shopt -s extglob
+sudo rm -rf $TARGET_DIR/!(cam*)
 
-# Create a new target directory
-echo "Creating $TARGET_DIR ..."
-sudo mkdir -p $TARGET_DIR
-
-# Copy local directory to target directory
+# Copy local directory to target directory (will not overwrite cam* dirs)
 echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
 sudo cp -rf $LOCAL_DIR/* $TARGET_DIR/
 
