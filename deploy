@@ -20,11 +20,17 @@ SERVICE_CC_CAM2_PATH=~/simple-cctv-hub/cam_capture/cc_cam2.service
 SERVICE_CC_CAM3_PATH=~/simple-cctv-hub/cam_capture/cc_cam3.service
 SERVICE_F_CLEANUP_PATH=~/simple-cctv-hub/footage_cleanup/f_cleanup.service
 
+SERVICE_SCRIPT_CC_CAM1_PATH=~/simple-cctv-hub/cam_capture/cc_cam1.sh
+SERVICE_SCRIPT_CC_CAM2_PATH=~/simple-cctv-hub/cam_capture/cc_cam2.sh
+SERVICE_SCRIPT_CC_CAM3_PATH=~/simple-cctv-hub/cam_capture/cc_cam3.sh
+SERVICE_SCRIPT_F_CLEANUP_PATH=~/simple-cctv-hub/footage_cleanup/f_cleanup.sh
+
 # Determine if running as publish user or development user
 DEVELOPMENT=1
 if [ "$USER" = "$PUBLISH_USER" ]; then
     DEVELOPMENT=0
 fi
+
 
 # List of service files and their target names (extract filename only for systemctl)
 declare -A SERVICES=(
@@ -34,11 +40,42 @@ declare -A SERVICES=(
     ["f_cleanup.service"]="$SERVICE_F_CLEANUP_PATH"
 )
 
+# List of service scripts to check and redeploy if changed
+declare -A SERVICE_SCRIPTS=(
+    ["cc_cam1.service"]="$SERVICE_CC_CAM1_PATH"
+    ["cc_cam2.service"]="$SERVICE_CC_CAM2_PATH"
+    ["cc_cam3.service"]="$SERVICE_CC_CAM3_PATH"
+    ["f_cleanup.service"]="$SERVICE_F_CLEANUP_PATH"
+)
+
+
+# Helper: Compare two files, return true if different, false if same
+check_and_save_if_changed() {
+    local src_file=$1
+    local dst_file=$2
+
+    if ! sudo diff -q "$src_file" "$dst_file" > /dev/null 2>&1; then
+        echo "Change detected for $dst_file."
+        return 0  # files are different
+    else
+        echo "$dst_file is up to date, no changes needed."
+        return 1  # files are the same
+    fi
+}
+
+
 # Function to update systemd service files, reload and restart
 update_service() {
     local service_name=$1
-    local local_service_file=$2
+    local service_script_path=$2
+    local local_service_file=$3
     local system_service_file="/etc/systemd/system/$service_name"
+
+    # Exit if the service script did not change
+    if ! check_and_save_if_changed "$local_service_file" "$system_service_file"; then
+        echo "Service file for $service_name not changed. Skipping update."
+        return
+    fi
 
     echo "Updating systemd service: $service_name ..."
     sudo cp "$local_service_file" "$system_service_file"
@@ -47,14 +84,17 @@ update_service() {
     sudo systemctl enable "$service_name"
 }
 
+
 if [ "$DEVELOPMENT" -eq 0 ]; then
     # Production: update all services
     for svc_name in "${!SERVICES[@]}"; do
-        update_service "$svc_name" "${SERVICES[$svc_name]}"
+        update_service "$svc_name" "${SERVICES[$svc_name]}" "${SERVICE_SCRIPTS[$svc_name]}"
     done
 else
     echo "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
 fi
+
+
 # Remove the target directory
 echo "Removing $TARGET_DIR ..."
 sudo rm -rf $TARGET_DIR
@@ -80,31 +120,18 @@ echo "Create www-data group and add www-data user to it ..."
 sudo groupadd www-data || true
 sudo usermod -aG www-data www-data
 
+
 NGINX_TMP_CUSTOM_CONF_PATH="/tmp/custom_nginx.conf"
+NGINX_TMP_NEW_CONF_PATH="/tmp/nginx.conf.new"
 
 # Set the new nginx conf
 echo "Checking for NGINX configuration changes ..."
 sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$NGINX_TMP_CUSTOM_CONF_PATH"
 
-if ! sudo diff -q "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH" > /dev/null 2>&1; then
-    echo "Updating NGINX configuration ..."
-    sudo cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
-
-    echo "Checking the new conf file ..."
-    if sudo nginx -t; then
-        echo "Configuration test passed. Restarting NGINX ..."
-        if sudo systemctl restart nginx; then
-            echo "NGINX successfully restarted."
-        else
-            echo "Failed to restart NGINX. Please check the logs."
-        fi
-    else
-        echo "Error: NGINX configuration test failed. Please check your configuration."
-        exit 1
-    fi
-else
-    echo "NGINX configuration is up to date, no changes needed."
+if check_and_save_if_changed "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"; then
+    cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_TMP_NEW_CONF_PATH"
 fi
+
 
 # Create footage dir if it doesn't exist
 if [ ! -d "$CCTV_FOOTAGE_DIR" ]; then
@@ -114,6 +141,7 @@ else
     echo "Footage directory already exists, skipping creation."
 fi
 
+
 # Seed the footage directory with sample video files
 if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then
     echo "Seeding CCTV footage directory with sample files ..."
@@ -121,6 +149,7 @@ if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then
 else
     echo "CCTV footage directory already seeded, skipping."
 fi
+
 
 # Set ownership to www-data for the footage directory
 echo "Setting permissions for $CCTV_WWW_DIR ..."
@@ -130,5 +159,6 @@ sudo chmod -R 755 $CCTV_WWW_DIR
 echo "Setting permissions for $CCTV_FOOTAGE_DIR ..."
 sudo chown -R $USER:www-data $CCTV_FOOTAGE_DIR  # Set group to www-data
 sudo chmod -R 755 $CCTV_FOOTAGE_DIR
+
 
 echo "Deployment complete!"
