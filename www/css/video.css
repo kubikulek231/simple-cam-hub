@@ -80,6 +80,7 @@
 }
 
 .video-container {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -105,15 +106,17 @@
 }
 
 video {
-    display: block;
     position: relative;
-    max-width: 100vw;
-    max-height: 100vh;
     width: 100%;
     height: 100%;
+    max-width: 100vw;
+    max-height: 100vh;
     object-fit: contain;
     box-sizing: border-box;
     overflow: hidden;
+    display: block;
+    min-width: 350px;
+    min-height: 350px;
 }
 
 .video-finished-overlay {

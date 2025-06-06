@@ -63,7 +63,6 @@ export function createStreamOverlay(cameraConf) {
     overlayContainer.appendChild(botSpacer);
 
     const footerSpacer = document.createElement("div");
-    footerSpacer.classList.add("flex-spacer");
     overlayContainer.appendChild(footerSpacer);
 
     // Append overlay to the document body
