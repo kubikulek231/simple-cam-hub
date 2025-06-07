@@ -11,7 +11,7 @@ TMP_DIR="/tmp/cam3_gstream_chunks"             # Temporary location for FIFOs an
 OUTPUT_DIR="/var/www/html/cam3"                # HLS output directory (served via web)
 RECORD_DIR="/home/raspberrypi5/footage/cam3"   # Long-term MKV recordings directory
 HLS_SEGMENT_TIME=5                             # HLS segment duration in seconds
-RECORD_SEGMENT_TIME=3600                       # Recording segment duration in seconds
+RECORD_SEGMENT_TIME=1800                       # Recording segment duration in seconds
 
 # === SETUP ===
 echo "[Init] Cleaning up old files and preparing directories..."
@@ -56,7 +56,7 @@ FFMPEG_LIVE_PID=$!
 echo "[FFmpeg] Starting 1-hour MKV recording with timestamped filenames..."
 ffmpeg -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
   -segment_time "$RECORD_SEGMENT_TIME" -reset_timestamps 1 -strftime 1 \
-  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mkv" &
+  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4" &
 
 FFMPEG_RECORD_PID=$!
 
