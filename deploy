@@ -153,7 +153,21 @@ echo "Checking for NGINX configuration changes ..."
 sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$NGINX_TMP_CUSTOM_CONF_PATH"
 
 if check_and_save_if_changed "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"; then
-    cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_TMP_NEW_CONF_PATH"
+    sudo cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
+    echo "Checking the new conf file ..."
+    if sudo nginx -t; then
+        echo "Configuration test passed. Restarting NGINX ..."
+        if sudo systemctl restart nginx; then
+            echo "NGINX successfully restarted."
+        else
+            echo "Failed to restart NGINX. Please check the logs."
+        fi
+    else
+        echo "Error: NGINX configuration test failed. Please check your configuration."
+        exit 1
+    fi
+else
+    echo "NGINX configuration is up to date, no changes needed."
 fi
 
 
