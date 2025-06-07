@@ -62,11 +62,17 @@
 }
 
 #homeTitle {
-    font-size: 30px;
+    font-size: 38px;
     width: 100%;
     text-align: center;
-    padding-top: 3px;
-    padding-bottom: 3px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    color: #fff;
+    letter-spacing: 1px;
+    text-shadow:
+        0 2px 8px rgba(0,0,0,0.28),
+        0 1px 0 #222,
+        0 0 16px rgba(0,0,0,0.18);
 }
 
 .stream-controls-container {
