@@ -97,18 +97,39 @@ update_service() {
     local service_script_path=$2
     local local_service_file=$3
     local system_service_file="/etc/systemd/system/$service_name"
+    local tmp_service_file="/tmp/$service_name"
 
-    # Exit if the service script did not change
-    if ! check_and_save_if_changed "$local_service_file" "$system_service_file"; then
-        echo "Service file for $service_name not changed. Skipping update."
-        return
+    local script_changed=1
+    local service_changed=1
+
+    # Check if the service script changed
+    if [ -f "$service_script_path" ]; then
+        local system_script_path="/usr/local/bin/$(basename "$service_script_path")"
+        if check_and_save_if_changed "$service_script_path" "$system_script_path"; then
+            script_changed=0
+            sudo cp "$service_script_path" "$system_script_path"
+            sudo chmod +x "$system_script_path"
+            dos2unix "$system_script_path"
+        fi
     fi
 
-    echo "Updating systemd service: $service_name ..."
-    sudo cp "$local_service_file" "$system_service_file"
-    sudo systemctl daemon-reload
-    sudo systemctl restart "$service_name"
-    sudo systemctl enable "$service_name"
+    # Check if the service file changed
+    if check_and_save_if_changed "$local_service_file" "$system_service_file"; then
+        service_changed=0
+        cp "$local_service_file" "$tmp_service_file"
+        dos2unix "$tmp_service_file"
+        sudo cp "$tmp_service_file" "$system_service_file"
+    fi
+
+    # Only reload/restart if either changed
+    if [ $script_changed -eq 0 ] || [ $service_changed -eq 0 ]; then
+        echo "Reloading and restarting $service_name ..."
+        sudo systemctl daemon-reload
+        sudo systemctl restart "$service_name"
+        sudo systemctl enable "$service_name"
+    else
+        echo "No changes for $service_name or its script. Skipping update."
+    fi
 }
 
 
@@ -128,6 +149,9 @@ shopt -s extglob
 sudo rm -rf $TARGET_DIR/!(cam*)
 
 # Copy local directory to target directory (will not overwrite cam* dirs)
+# Convert all files in $LOCAL_DIR to Unix line endings before copying
+echo "Converting $LOCAL_DIR files using dos2unix ..."
+find "$LOCAL_DIR" -type f -exec dos2unix -q {} +
 echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
 sudo cp -rf $LOCAL_DIR/* $TARGET_DIR/
 
@@ -151,6 +175,7 @@ NGINX_TMP_NEW_CONF_PATH="/tmp/nginx.conf.new"
 # Set the new nginx conf
 echo "Checking for NGINX configuration changes ..."
 sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$NGINX_TMP_CUSTOM_CONF_PATH"
+dos2unix "$NGINX_TMP_CUSTOM_CONF_PATH"
 
 if check_and_save_if_changed "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"; then
     sudo cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
@@ -182,6 +207,7 @@ fi
 
 # Seed the footage directory with sample video files
 if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then
+    dos2unix "$CCTV_SEED_FOOTAGE_SCRIPT"
     echo "Seeding CCTV footage directory with sample files ..."
     "$CCTV_SEED_FOOTAGE_SCRIPT"
 else
