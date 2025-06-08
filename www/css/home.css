@@ -29,6 +29,12 @@
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Add a subtle shadow for depth */
 }
 
+#videoContainer > .stream-container > .rounded-corners {
+    border-radius: 5px; /* Apply rounded corners to the video wrapper */
+    overflow: hidden; /* Ensure content does not overflow the rounded corners */
+}
+
+
 #videoContainer > .stream-container:hover {
     background-color: #181818; /* Slightly lighter black */
     box-shadow: 8px 0 18px 0 rgba(0, 0, 0, 0.25); /* Subtle shadow to the right */

@@ -1,10 +1,19 @@
 /* Base CSS styles for common elements like buttons etc. */
 
 html {
-    background: linear-gradient(120deg, #004a4a 0%, #005f5f 50%, #003333 100%);
-    background-size: 200% 200%;
+    position:fixed;
+    background: radial-gradient(
+        ellipse at 60% 40%,
+        #017272 0%,
+        #016060 40%,
+        #004e4e 70%,
+        #003333 100%
+    );
+    background-size: 100% 100%;
     min-width: 500px;
     min-height: 500px;
+    width: 100vw;
+    height: 100vh;
 }
 
 body {
@@ -22,6 +31,7 @@ body {
     position: relative;
     width: 100%;
     height: 100%;
+    overflow: auto;
 }
 
 button {

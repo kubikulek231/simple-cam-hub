@@ -51,7 +51,7 @@ function createStreamControls() {
 }
 
 // Main function to create the stream container (like createStoredVideo in videoFactory.js)
-export function createStreamContainer(cameraConf, showControls = true, showTitle = true) {
+export function createStreamContainer(cameraConf, showControls = true, showTitle = true, roundCorners = false) {
     // Create the main container for the stream
     const streamContainer = document.createElement('div');
     streamContainer.classList.add("stream-container");
@@ -60,6 +60,11 @@ export function createStreamContainer(cameraConf, showControls = true, showTitle
     // Video wrapper
     const streamWrapper = document.createElement('div');
     streamWrapper.classList.add("stream-wrapper-outer");
+
+    // Apply rounded corners if specified
+    if (roundCorners) {
+        streamWrapper.classList.add("rounded-corners");
+    }
 
     const liveVideo = createLiveVideoElement(cameraConf.source, false);
 

@@ -5,7 +5,7 @@ function createStreamContainersFromConf() {
     const videoContainer = document.getElementById("videoContainer");
 
     loadedCameraConfList.forEach(cameraConfItem => {
-        const streamContainerElement = createStreamContainer(cameraConfItem, true);
+        const streamContainerElement = createStreamContainer(cameraConfItem, true, true, true);
         videoContainer.appendChild(streamContainerElement);
     });
 }
