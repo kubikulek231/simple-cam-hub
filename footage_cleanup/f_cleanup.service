@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=idle
-ExecStart=/home/raspberrypi5/simple-cctv-hub/footage_mgmt/f_cleanup.sh
+ExecStart=/home/raspberrypi5/simple-cctv-hub/footage_cleanup/f_cleanup.sh
 User=raspberrypi5
 Restart=always
 RuntimeMaxSec=1d

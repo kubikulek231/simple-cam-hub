@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Sleep time between checks (in seconds)
-SLEEP_TIME=60
+SLEEP_TIME=10
 
 # Array of directories where video files are stored for each camera
 DIRECTORIES=(
