@@ -50,7 +50,7 @@ sleep 2  # Let GStreamer pipelines warm up
 
 # === START FFMPEG: Live Streaming via HLS ===
 echo "[FFmpeg] Starting HLS live stream with $HLS_SEGMENT_TIME sec segments..."
-ffmpeg -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
+ffmpeg -loglevel warning -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
   -hls_time "$HLS_SEGMENT_TIME" -hls_list_size 5 -hls_segment_type fmp4 \
   -hls_fmp4_init_filename init.mp4 \
   -hls_segment_filename "$OUTPUT_DIR/segment_%03d.m4s" "$OUTPUT_DIR/index.m3u8" &

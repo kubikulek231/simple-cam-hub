@@ -1,4 +1,4 @@
-[unit]
+[Unit]
 Description=CAM1 Capture and Stream Service
 After=multi-user.target
 
