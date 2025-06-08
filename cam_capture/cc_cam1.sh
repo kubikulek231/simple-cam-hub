@@ -14,6 +14,7 @@ OUTPUT_DIR="/var/www/html/cam1"                # HLS output directory (served vi
 RECORD_DIR="/home/raspberrypi5/footage/cam1"   # Long-term MKV recordings directory
 HLS_SEGMENT_TIME=5                             # HLS segment duration in seconds
 RECORD_SEGMENT_TIME=1800                       # Recording segment duration in seconds
+GSTREAMER_WARMUP_TIME=2                        # Seconds to wait for GStreamer pipelines to warm up
 
 
 # === SETUP ===
@@ -31,7 +32,7 @@ mkfifo "$TMP_DIR/stream_record.ts"
 # This pipeline pulls the sub stream (lower res) and writes it into a FIFO.
 # FFmpeg will pick it up and segment it into HLS for web playback.
 echo "[GStreamer] Starting SUB stream for live HLS..."
-gst-launch-1.0 -e -q  rtspsrc location="$RTSP_SUB" latency=100 ! \
+gst-launch-1.0 -e rtspsrc location="$RTSP_SUB" latency=100 ! \
   rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_live.ts" &
 GST_LIVE_PID=$!
 
@@ -40,17 +41,17 @@ GST_LIVE_PID=$!
 # This pipeline pulls the main stream (high res) and writes it into a second FIFO.
 # FFmpeg will segment this into 1-hour MKV files with timestamped filenames.
 echo "[GStreamer] Starting MAIN stream for recording..."
-gst-launch-1.0 -e -q rtspsrc location="$RTSP_MAIN" latency=100 ! \
+gst-launch-1.0 -e rtspsrc location="$RTSP_MAIN" latency=100 ! \
   rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_record.ts" &
 GST_RECORD_PID=$!
 
 
-sleep 2  # Let GStreamer pipelines warm up
+sleep $GSTREAMER_WARMUP_TIME  # Let GStreamer pipelines warm up
 
 
 # === START FFMPEG: Live Streaming via HLS ===
 echo "[FFmpeg] Starting HLS live stream with $HLS_SEGMENT_TIME sec segments..."
-ffmpeg -loglevel warning -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
+ffmpeg -fflags +genpts -loglevel warning -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
   -hls_time "$HLS_SEGMENT_TIME" -hls_list_size 5 -hls_segment_type fmp4 \
   -hls_fmp4_init_filename init.mp4 \
   -hls_segment_filename "$OUTPUT_DIR/segment_%03d.m4s" "$OUTPUT_DIR/index.m3u8" &
@@ -59,7 +60,7 @@ FFMPEG_LIVE_PID=$!
 
 # === START FFMPEG: Recording to MKV ===
 echo "[FFmpeg] Starting $RECORD_SEGMENT_TIME second MKV recording with timestamped filenames..."
-ffmpeg -loglevel warning -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
+ffmpeg -fflags +genpts -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
   -segment_time "$RECORD_SEGMENT_TIME" -reset_timestamps 1 -strftime 1 \
   -segment_list "$RECORD_DIR/segments.txt" \
   "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4" &
@@ -72,14 +73,25 @@ FFMPEG_RECORD_PID=$!
   do
     # Remove carriage returns and whitespace
     FILE=$(echo "$FILE" | tr -d '\r\n[:space:]')
+    FILE_PATH="$RECORD_DIR/$FILE"
+    echo "[CHECK] Processing file: $FILE_PATH"
     # Only process if file exists and is not empty
-    if [[ -f "$FILE" && -s "$FILE" ]]; then
-      # Check file with ffprobe
-      if ffprobe -v error "$FILE" > /dev/null; then
-        touch "${FILE}.ok"
+    if [[ -f "$FILE_PATH" && -s "$FILE_PATH" ]]; then
+      # Get duration with ffprobe (returns empty if file is corrupt)
+      DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FILE_PATH")
+      if [[ -n "$DURATION" ]]; then
+        echo "$DURATION" > "${FILE_PATH}.ok"
+        echo "$RECORD_SEGMENT_TIME" >> "${FILE_PATH}.ok"
+        if [[ -f "${FILE_PATH}.ok" ]]; then
+          echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION."
+        else
+          echo "[ERROR] ffprobe passed but failed to create ${FILE_PATH}.ok!"
+        fi
       else
-        echo "[WARN] File $FILE failed ffprobe check, not marking as OK."
+        echo "[WARN] File $FILE_PATH failed ffprobe check, not marking as OK."
       fi
+    else
+      echo "[SKIP] $FILE_PATH does not exist or is empty, skipping."
     fi
   done
 ) &
