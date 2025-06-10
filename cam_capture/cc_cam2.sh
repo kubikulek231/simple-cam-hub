@@ -33,7 +33,7 @@ mkfifo "$TMP_DIR/stream_record.ts"
 # FFmpeg will pick it up and segment it into HLS for web playback.
 echo "[GStreamer] Starting SUB stream for live HLS..."
 gst-launch-1.0 -e rtspsrc location="$RTSP_SUB" latency=100 ! \
-  rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_live.ts" &
+  rtph265depay ! h265parse ! mpegtsmux ! identity sync=true ! filesink location="$TMP_DIR/stream_live.ts" &
 GST_LIVE_PID=$!
 
 
@@ -42,7 +42,7 @@ GST_LIVE_PID=$!
 # FFmpeg will segment this into 1-hour MKV files with timestamped filenames.
 echo "[GStreamer] Starting MAIN stream for recording..."
 gst-launch-1.0 -e rtspsrc location="$RTSP_MAIN" latency=100 ! \
-  rtph265depay ! h265parse ! mpegtsmux ! filesink location="$TMP_DIR/stream_record.ts" &
+  rtph265depay ! h265parse ! mpegtsmux ! identity sync=true ! filesink location="$TMP_DIR/stream_record.ts" &
 GST_RECORD_PID=$!
 
 
@@ -51,7 +51,7 @@ sleep $GSTREAMER_WARMUP_TIME  # Let GStreamer pipelines warm up
 
 # === START FFMPEG: Live Streaming via HLS ===
 echo "[FFmpeg] Starting HLS live stream with $HLS_SEGMENT_TIME sec segments..."
-ffmpeg -fflags +genpts -loglevel warning -y -re -i "$TMP_DIR/stream_live.ts" -c copy -f hls \
+ffmpeg -fflags +genpts -loglevel warning -y -re -i "$TMP_DIR/stream_live.ts" -c copy -tag:v hvc1 -f hls \
   -hls_time "$HLS_SEGMENT_TIME" -hls_list_size 5 -hls_segment_type fmp4 \
   -hls_fmp4_init_filename init.mp4 \
   -hls_segment_filename "$OUTPUT_DIR/segment_%03d.m4s" "$OUTPUT_DIR/index.m3u8" &
@@ -98,6 +98,16 @@ FFMPEG_RECORD_PID=$!
   done
 ) &
 INTEGRITY_CHECKER_PID=$!
+
+
+# Periodically trim segments.txt to last 100 lines
+(
+  while true; do
+    tail -n 100 "$RECORD_DIR/segments.txt" > "$RECORD_DIR/segments.txt.tmp" && mv "$RECORD_DIR/segments.txt.tmp" "$RECORD_DIR/segments.txt"
+    sleep 600  # Run every 10 minutes
+  done
+) &
+TRIM_SEGMENTS_PID=$!
 
 
 # Periodically clean up old HLS segments, keeping only the last 10
