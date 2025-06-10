@@ -80,10 +80,12 @@ FFMPEG_RECORD_PID=$!
       # Get duration with ffprobe (returns empty if file is corrupt)
       DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FILE_PATH")
       if [[ -n "$DURATION" ]]; then
-        echo "$DURATION" > "${FILE_PATH}.ok"
-        echo "$RECORD_SEGMENT_TIME" >> "${FILE_PATH}.ok"
+        END_TIME=$(date +%s)
+        echo "duration=$DURATION" > "${FILE_PATH}.ok"
+        echo "segment_time=$RECORD_SEGMENT_TIME" >> "${FILE_PATH}.ok"
+        echo "end_time=$END_TIME" >> "${FILE_PATH}.ok"
         if [[ -f "${FILE_PATH}.ok" ]]; then
-          echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION."
+          echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION, end time $END_TIME."
         else
           echo "[ERROR] ffprobe passed but failed to create ${FILE_PATH}.ok!"
         fi
