@@ -55,10 +55,10 @@ declare -A SERVICES=(
 
 # List of service scripts to check and redeploy if changed
 declare -A SERVICE_SCRIPTS=(
-    ["cc_cam1.service"]="$SERVICE_CC_CAM1_PATH"
-    ["cc_cam2.service"]="$SERVICE_CC_CAM2_PATH"
-    ["cc_cam3.service"]="$SERVICE_CC_CAM3_PATH"
-    ["f_cleanup.service"]="$SERVICE_F_CLEANUP_PATH"
+    ["cc_cam1.service"]="$SERVICE_SCRIPT_CC_CAM1_PATH"
+    ["cc_cam2.service"]="$SERVICE_SCRIPT_CC_CAM2_PATH"
+    ["cc_cam3.service"]="$SERVICE_SCRIPT_CC_CAM3_PATH"
+    ["f_cleanup.service"]="$SERVICE_SCRIPT_F_CLEANUP_PATH"
 )
 
 
@@ -136,7 +136,7 @@ update_service() {
 if [ "$DEVELOPMENT" -eq 0 ]; then
     # Production: update all services
     for svc_name in "${!SERVICES[@]}"; do
-        update_service "$svc_name" "${SERVICES[$svc_name]}" "${SERVICE_SCRIPTS[$svc_name]}"
+        update_service "$svc_name" "${SERVICE_SCRIPTS[$svc_name]}" "${SERVICES[$svc_name]}"
     done
 else
     echo "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
