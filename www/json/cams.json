@@ -4,21 +4,21 @@
           "id": 0,
           "title": "Stodola",
           "source": "/cam1/index.m3u8",
-          "footageListPath": "/footage/cam1/footage.json",
+          "footageInfoPath": "/footage/cam1/footage_info.json",
           "footageDirectory": "/footage/cam1"
       },
       {
           "id": 1,
           "title": "Cesta",
           "source": "/cam2/index.m3u8",
-          "footageListPath": "/footage/cam2/footage.json",
+          "footageInfoPath": "/footage/cam2/footage_info.json",
           "footageDirectory": "/footage/cam2"
       },
       {
           "id": 2,
           "title": "Terasa",
           "source": "/cam3/index.m3u8",
-          "footageListPath": "/footage/cam3/footage.json",
+          "footageInfoPath": "/footage/cam3/footage_info.json",
           "footageDirectory": "/footage/cam3"
       }
   ]
