@@ -67,28 +67,21 @@ ffmpeg -fflags +genpts -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment 
 FFMPEG_RECORD_PID=$!
 
 
-# Monitor segment list for new files and check integrity
 (
   tail -Fn0 "$RECORD_DIR/segments.txt" | while read FILE
   do
-    # Remove carriage returns and whitespace
     FILE=$(echo "$FILE" | tr -d '\r\n[:space:]')
     FILE_PATH="$RECORD_DIR/$FILE"
-    echo "[CHECK] Processing file: $FILE_PATH"
-    # Only process if file exists and is not empty
+    DETECTED_TIME=$(date +%s)
+    echo "[CHECK] Processing file: $FILE_PATH (detected at $DETECTED_TIME)"
     if [[ -f "$FILE_PATH" && -s "$FILE_PATH" ]]; then
-      # Get duration with ffprobe (returns empty if file is corrupt)
+      sleep 3
       DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FILE_PATH")
       if [[ -n "$DURATION" ]]; then
-        END_TIME=$(date +%s)
         echo "duration=$DURATION" > "${FILE_PATH}.ok"
         echo "segment_time=$RECORD_SEGMENT_TIME" >> "${FILE_PATH}.ok"
-        echo "end_time=$END_TIME" >> "${FILE_PATH}.ok"
-        if [[ -f "${FILE_PATH}.ok" ]]; then
-          echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION, end time $END_TIME."
-        else
-          echo "[ERROR] ffprobe passed but failed to create ${FILE_PATH}.ok!"
-        fi
+        echo "end_time=$DETECTED_TIME" >> "${FILE_PATH}.ok"
+        echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION, end time $DETECTED_TIME."
       else
         echo "[WARN] File $FILE_PATH failed ffprobe check, not marking as OK."
       fi
@@ -100,21 +93,12 @@ FFMPEG_RECORD_PID=$!
 INTEGRITY_CHECKER_PID=$!
 
 
-# Periodically trim segments.txt to last 100 lines
-(
-  while true; do
-    tail -n 100 "$RECORD_DIR/segments.txt" > "$RECORD_DIR/segments.txt.tmp" && mv "$RECORD_DIR/segments.txt.tmp" "$RECORD_DIR/segments.txt"
-    sleep 600  # Run every 10 minutes
-  done
-) &
-TRIM_SEGMENTS_PID=$!
-
-
 # Periodically clean up old HLS segments, keeping only the last 10
 (
   while true; do
+    echo "[INFO] Cleaning up old HLS segments..."
     ls -1t "$OUTPUT_DIR"/segment_*.m4s 2>/dev/null | tail -n +11 | xargs -r rm --
-    sleep 10
+    sleep 30
   done
 ) &
 CLEANUP_HLS_PID=$!

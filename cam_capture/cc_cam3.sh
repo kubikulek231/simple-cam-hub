@@ -100,10 +100,12 @@ FFMPEG_RECORD_PID=$!
 INTEGRITY_CHECKER_PID=$!
 
 
-# Periodically trim segments.txt to last 100 lines
+# Periodically trim segments.txt to last 100 lines (truncate in-place)
 (
   while true; do
-    tail -n 100 "$RECORD_DIR/segments.txt" > "$RECORD_DIR/segments.txt.tmp" && mv "$RECORD_DIR/segments.txt.tmp" "$RECORD_DIR/segments.txt"
+    TMP=$(mktemp)
+    tail -n 100 "$RECORD_DIR/segments.txt" > "$TMP" && cat "$TMP" > "$RECORD_DIR/segments.txt"
+    rm -f "$TMP"
     sleep 600  # Run every 10 minutes
   done
 ) &
