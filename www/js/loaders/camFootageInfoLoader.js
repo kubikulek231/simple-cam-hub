@@ -10,21 +10,23 @@ export async function fetchAndStoreFootageInfo() {
     loadedCameraFootageInfo = []; // Reset the footage info array
     loadedCameraFootageInfoStatus = false; // Reset status
 
-    const footageInfoPromises = loadedCameraConfList.map(async cameraConf => {
-        if (cameraConf.footageInfoPath) {
-            const info = await fetchFootageInfo(cameraConf.footageInfoPath);
-            loadedCameraFootageInfo.push(info);
-        } else {
-            loadedCameraFootageInfo.push([]);
-            return Promise.resolve();
-        }
-    });
-
     try {
-        await Promise.all(footageInfoPromises);
+        // Fetch all footage info in parallel, keeping order
+        const footageInfoResults = await Promise.all(
+            loadedCameraConfList.map(async (cameraConf) => {
+                if (cameraConf.footageInfoPath) {
+                    return await fetchFootageInfo(cameraConf.footageInfoPath);
+                } else {
+                    return []; // Return empty list if path is not defined
+                }
+            })
+        );
+
+        // Store results as array of arrays (each corresponding to a camera)
+        loadedCameraFootageInfo = footageInfoResults;
+
         loadedCameraFootageInfoStatus = true;
         console.log('All footage info fetched and stored successfully.');
-        console.log(loadedCameraFootageInfo)
     } catch (error) {
         loadedCameraFootageInfoStatus = false;
         console.error('Error fetching footage info:', error);

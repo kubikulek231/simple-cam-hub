@@ -3,6 +3,7 @@ import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
 import { getCurrentDateTimeInWords } from "../utils.js";
+import { loadedCameraFootageInfo, loadedCameraFootageInfoStatus } from "../loaders/camFootageInfoLoader.js";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -23,7 +24,7 @@ export function handleBrowserOverlay() {
 
 async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     // Fetch and process video list
-    const videoList = await fetchVideoList(cameraConf.footageDirectory);
+    const videoList = loadedCameraFootageInfo[cameraConf.id];
     const loadedVideoList = videoList.reverse();
     const pageTotalNum = Math.ceil(videoList.length / itemsPerPage);
     let videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
@@ -94,7 +95,7 @@ function paginateItems(items, itemsPerPage, pageNumber) {
     return paginatedItems;
 }
 
-export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
+function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
     const element = document.createElement("div");
     element.id = "browserTable";
 
@@ -105,9 +106,9 @@ export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
     const tableBody = table.querySelector(`tbody`);
 
     // Populate the table with video items
-    paginatedVideoList.forEach((videoPath, index) => {
+    paginatedVideoList.forEach((videoInfoEntry, index) => {
         const id = index + (pageNum - 1) * ITEMS_PER_PAGE;
-        const splitVideoName = splitVideoFilename(videoPath);
+        const splitVideoName = splitVideoFilename(videoInfoEntry.file);
         const dayMonthNames = getDayAndMonthNames(
             splitVideoName.day,
             splitVideoName.month,
@@ -125,7 +126,7 @@ export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
             hourString + ":" + minuteString,
         ];
 
-        const newRow = createTableRow(rowData, videoPath, cameraConf) 
+        const newRow = createTableRow(rowData, videoInfoEntry.file, cameraConf) 
         tableBody.appendChild(newRow);
     });
 
@@ -134,7 +135,7 @@ export function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
     return element;
 }
 
-function createTableRow(rowData, videoPath, cameraConf) {
+function createTableRow(rowData, videoInfoEntry, cameraConf) {
     // Create a new table row
     const newRow = document.createElement("tr");
 
@@ -151,7 +152,7 @@ function createTableRow(rowData, videoPath, cameraConf) {
     button.textContent = "▶";
 
     button.addEventListener("click", function() {
-        createFootageOverlay(cameraConf, videoPath);
+        createFootageOverlay(cameraConf, videoInfoEntry.file);
     });
 
     // Create a new cell and append the button to it

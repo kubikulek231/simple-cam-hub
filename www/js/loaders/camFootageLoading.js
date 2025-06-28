@@ -42,7 +42,7 @@ export function fetchVideoList(directoryUrl, extensions = [".mp4", ".mkv", ".ts"
 export function splitVideoFilename(filename) {
 
     // Footage in format: 2024-09-29_02-24-56.ext
-
+    
     // Remove the file extension (.mkv)
     const nameWithoutExtension = filename.replace('.mkv', '');
 
