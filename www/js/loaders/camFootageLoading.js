@@ -39,6 +39,25 @@ export function fetchVideoList(directoryUrl, extensions = [".mp4", ".mkv", ".ts"
     });
 }
 
+
+/**
+ * Parses a video filename in the format "YYYY-MM-DD_HH-MM-SS.ext" and extracts the date and time components.
+ *
+ * @param {string} filename - The video filename (e.g., "2024-09-29_02-24-56.mkv" or "2024-09-29_02-24-56.mp4").
+ * @returns {Object} An object containing the extracted date and time parts as integers:
+ *   {
+ *     year: number,
+ *     month: number,
+ *     day: number,
+ *     hour: number,
+ *     minute: number,
+ *     second: number
+ *   }
+ *
+ * @example
+ * const info = splitVideoFilename("2024-09-29_02-24-56.mkv");
+ * // info = { year: 2024, month: 9, day: 29, hour: 2, minute: 24, second: 56 }
+ */
 export function splitVideoFilename(filename) {
 
     // Footage in format: 2024-09-29_02-24-56.ext
@@ -84,4 +103,16 @@ export function getDayAndMonthNames(day, month, year = new Date().getFullYear())
 
     // Return the day and month names as an array
     return [dayName, monthName];
+}
+
+export function getStartTimestampFromSplitVideoName(splitVideoName) {
+    // JS months are 0-based, so subtract 1 from month
+    return Math.floor(new Date(
+        splitVideoName.year,
+        splitVideoName.month - 1,
+        splitVideoName.day,
+        splitVideoName.hour,
+        splitVideoName.minute,
+        splitVideoName.second
+    ).getTime() / 1000);
 }

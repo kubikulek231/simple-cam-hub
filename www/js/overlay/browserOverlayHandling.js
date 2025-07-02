@@ -1,4 +1,4 @@
-import { fetchVideoList, splitVideoFilename, getDayAndMonthNames } from "../loaders/camFootageLoading.js";
+import { fetchVideoList, splitVideoFilename, getDayAndMonthNames, getStartTimestampFromSplitVideoName } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
@@ -25,7 +25,7 @@ export function handleBrowserOverlay() {
 async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     // Fetch and process video list
     const videoList = loadedCameraFootageInfo[cameraConf.id];
-    const loadedVideoList = videoList.reverse();
+    const loadedVideoList = videoList;
     const pageTotalNum = Math.ceil(videoList.length / itemsPerPage);
     let videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
 
@@ -107,6 +107,7 @@ function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
 
     // Populate the table with video items
     paginatedVideoList.forEach((videoInfoEntry, index) => {
+        console.log(videoInfoEntry);
         const id = index + (pageNum - 1) * ITEMS_PER_PAGE;
         const splitVideoName = splitVideoFilename(videoInfoEntry.file);
         const dayMonthNames = getDayAndMonthNames(
@@ -116,7 +117,7 @@ function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
         );
         const hourString = String(splitVideoName.hour);
         const minuteString = String(splitVideoName.minute).padStart(2, "0");
-
+        const isVideoValid = evaluateVideoStatus(videoInfoEntry, splitVideoName, 0.5);
         const rowData = [
             id,
             splitVideoName.year,
@@ -124,6 +125,7 @@ function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
             splitVideoName.day + ".",
             dayMonthNames[1],
             hourString + ":" + minuteString,
+            isVideoValid ? "OK" : "-",
         ];
 
         const newRow = createTableRow(rowData, videoInfoEntry.file, cameraConf) 
@@ -166,7 +168,7 @@ function createTable() {
     table.id = 'browserTable';
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
-    const columns = ['ID', 'Rok', 'Den v týdnu', 'Den', 'Měsíc', 'Čas', 'Spustit'];
+    const columns = ['ID', 'Rok', 'Den v týdnu', 'Den', 'Měsíc', 'Čas', 'Stav', 'Spustit'];
     // Loop through columns to create th elements
     columns.forEach(column => {
         const th = document.createElement('th');
@@ -294,4 +296,30 @@ function createBrowserDescriptor(cameraConf) {
 
     // Append the descriptor container to the body (or any other element)
     return descriptorContainer;
+}
+
+function evaluateVideoStatus(videoInfoEntry, splitVideoName, thresh = 0.05) {
+    const startTimestamp = getStartTimestampFromSplitVideoName(splitVideoName);
+    const endTimestamp = videoInfoEntry.end_time;
+    const duration = videoInfoEntry.duration;
+    const segmentTime = videoInfoEntry.segment_time;
+
+    console.log("startTimestamp: ", startTimestamp);
+    console.log("endTimestamp: ", endTimestamp);
+    console.log("duration: ", duration);
+    console.log("segmentTime: ", segmentTime);
+
+    // Calculate actual segment length from timestamps
+    const actualSegmentLength = endTimestamp - startTimestamp;
+
+    const tolerance = segmentTime * thresh;
+
+    // Check if both duration and actual segment length are within tolerance of segment_time
+    const durationOk = Math.abs(duration - segmentTime) <= tolerance;
+    const segmentLengthOk = Math.abs(actualSegmentLength - segmentTime) <= tolerance;
+
+    console.log("durationOk: ", durationOk);
+    console.log("segmentLengthOk: ", segmentLengthOk);
+
+    return durationOk && segmentLengthOk;
 }
