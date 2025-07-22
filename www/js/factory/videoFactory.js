@@ -146,14 +146,21 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     });
   
     video.addEventListener('timeupdate', function () {
+      // Only show timestamp if video metadata is loaded and duration is valid
+      if (isNaN(video.duration) || video.duration === 0) {
+        timestampDisplay.innerHTML = '';
+        return;
+      }
+
       const percent = (video.currentTime / video.duration) * 100;
       progressBar.style.width = percent + '%';
-  
+
       const currentTime = formatTime(video.currentTime);
       const totalDuration = formatTime(video.duration);
-      timestampDisplay.textContent = `${currentTime} / ${totalDuration}`;
+      timestampDisplay.innerHTML = `${currentTime} / <wbr>${totalDuration}`;
+      timestampDisplay.style.whiteSpace = 'nowrap';
     });
-  
+    
     video.addEventListener('ended', () => {
       stopButton.disabled = true;
       resumeButton.disabled = false;
