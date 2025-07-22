@@ -140,5 +140,8 @@ export function groupItemsByDaysAgo(items) {
         groups[daysAgo].push(item);
     });
 
+    // Ensure there is always a key for today (0), even if empty
+    if (!groups[0]) groups[0] = [];
+
     return groups;
 }
