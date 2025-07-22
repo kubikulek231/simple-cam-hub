@@ -115,7 +115,29 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4') {
       resumeButton.disabled = true;
       stopButton.disabled = false;
     });
-  
+
+    // Speed button
+    const speedButton = document.createElement("button");
+    speedButton.classList.add("button", "button-speed");
+    speedButton.textContent = "1x";
+
+    let currentSpeed = 1;
+
+    speedButton.addEventListener("click", function() {
+        // Use the video element passed to the function
+        if (!video) return;
+
+        // Cycle through speeds: 1x, 2x, 5x, 10x
+        if (currentSpeed === 1) currentSpeed = 2;
+        else if (currentSpeed === 2) currentSpeed = 5;
+        else if (currentSpeed === 5) currentSpeed = 10;
+        else if (currentSpeed === 10) currentSpeed = 20;
+        else currentSpeed = 1;
+
+        video.playbackRate = currentSpeed;
+        speedButton.textContent = `${currentSpeed}x`;
+    });
+
     const downloadButton = document.createElement('button');
     downloadButton.textContent = '💾 ULOŽIT DO POČÍTAČE';
     downloadButton.classList.add("button-download");
@@ -158,6 +180,7 @@ export function createStoredVideo(videoSource, videoType = 'video/mp4') {
     buttonContainer.classList.add("resume-stop-time-container");
     buttonContainer.appendChild(stopButton);
     buttonContainer.appendChild(resumeButton);
+    buttonContainer.appendChild(speedButton);
     buttonContainer.appendChild(timestampContainer);
 
     buttonContainer.appendChild(createFlexSpacer());
