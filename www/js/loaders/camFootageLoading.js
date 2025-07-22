@@ -50,8 +50,7 @@ export function fetchVideoList(directoryUrl, extensions = [".mp4", ".mkv", ".ts"
  *     month: number,
  *     day: number,
  *     hour: number,
- *     minute: number,
- *     second: number
+ *     minute: number
  *   }
  *
  * @example
@@ -72,7 +71,7 @@ export function splitVideoFilename(filename) {
     const [year, month, day] = datePart.split('-').map(Number); // Convert to integers
 
     // Split the time part into hour, minute, second
-    const [hour, minute, second] = timePart.split('-').map(Number); // Convert to integers
+    const [hour, minute] = timePart.split('-').map(Number); // Convert to integers
 
     // Return an object containing the extracted parts as integers
     return {
@@ -80,8 +79,7 @@ export function splitVideoFilename(filename) {
         month: month,
         day: day,
         hour: hour,
-        minute: minute,
-        second: second
+        minute: minute
     };
 }
 
@@ -112,8 +110,7 @@ export function getStartTimestampFromSplitVideoName(splitVideoName) {
         splitVideoName.month - 1,
         splitVideoName.day,
         splitVideoName.hour,
-        splitVideoName.minute,
-        splitVideoName.second
+        splitVideoName.minute
     ).getTime() / 1000);
 }
 

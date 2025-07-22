@@ -101,7 +101,10 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
         );
         const hourString = String(splitVideoName.hour);
         const minuteString = String(splitVideoName.minute).padStart(2, "0");
-        const isVideoValid = evaluateVideoStatus(videoInfoEntry, splitVideoName, 0.5);
+        const isVideoValid = evaluateVideoStatus(videoInfoEntry, splitVideoName, 0.9);
+
+        let validStatus = isVideoValid ? "OK" : "X";
+
         const rowData = [
             id,
             splitVideoName.year,
@@ -109,7 +112,7 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
             splitVideoName.day + ".",
             dayMonthNames[1],
             hourString + ":" + minuteString,
-            isVideoValid ? "OK" : "-",
+            id === 0 && pageNum === 1 ? "REC" : validStatus,
         ];
 
         const newRow = createTableRow(rowData, videoInfoEntry, cameraConf) 
@@ -288,6 +291,7 @@ function evaluateVideoStatus(videoInfoEntry, splitVideoName, thresh = 0.05) {
     const duration = videoInfoEntry.duration;
     const segmentTime = videoInfoEntry.segment_time;
 
+    console.log("splitVideoName:", splitVideoName);
     console.log("startTimestamp: ", startTimestamp);
     console.log("endTimestamp: ", endTimestamp);
     console.log("duration: ", duration);
