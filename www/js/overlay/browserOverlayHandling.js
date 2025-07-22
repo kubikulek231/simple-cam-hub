@@ -128,7 +128,7 @@ function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
             isVideoValid ? "OK" : "-",
         ];
 
-        const newRow = createTableRow(rowData, videoInfoEntry.file, cameraConf) 
+        const newRow = createTableRow(rowData, videoInfoEntry, cameraConf) 
         tableBody.appendChild(newRow);
     });
 

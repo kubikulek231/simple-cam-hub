@@ -4,6 +4,7 @@ import { getCurrentDateTimeInWords } from "../utils.js";
 
 export function createFootageOverlay(cameraConfItem, videoPath) {
     // Remove existing overlay if it exists
+    console.log("Creating footage overlay for video:", videoPath);
     const existingOverlay = document.getElementById("footageOverlay");
     if (existingOverlay) {
         existingOverlay.remove();
