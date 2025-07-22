@@ -116,3 +116,32 @@ export function getStartTimestampFromSplitVideoName(splitVideoName) {
         splitVideoName.second
     ).getTime() / 1000);
 }
+
+/**
+ * Groups video items by the number of days ago they were recorded.
+ * @param {Array} items - Array of videoInfoEntry objects (must have 'file' property).
+ * @returns {Object} An object where keys are daysAgo (0 = today, 1 = yesterday, ...) and values are arrays of items.
+ */
+export function groupItemsByDaysAgo(items) {
+    const groups = {};
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Midnight for accurate day comparison
+
+    items.forEach(item => {
+        const split = splitVideoFilename(item.file);
+        if (!split.year || !split.month || !split.day) return; // skip invalid
+
+        // JS months are 0-based
+        const itemDate = new Date(split.year, split.month - 1, split.day);
+        itemDate.setHours(0, 0, 0, 0);
+
+        // Calculate days ago
+        const diffMs = today - itemDate;
+        const daysAgo = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (!groups[daysAgo]) groups[daysAgo] = [];
+        groups[daysAgo].push(item);
+    });
+
+    return groups;
+}

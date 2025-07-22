@@ -1,11 +1,9 @@
-import { fetchVideoList, splitVideoFilename, getDayAndMonthNames, getStartTimestampFromSplitVideoName } from "../loaders/camFootageLoading.js";
+import { fetchVideoList, splitVideoFilename, getDayAndMonthNames, getStartTimestampFromSplitVideoName, groupItemsByDaysAgo } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
 import { getCurrentDateTimeInWords } from "../utils.js";
 import { loadedCameraFootageInfo, loadedCameraFootageInfoStatus } from "../loaders/camFootageInfoLoader.js";
-
-const ITEMS_PER_PAGE = 12;
 
 export function handleBrowserOverlay() {
     // Handling opening and closing the browser overlay
@@ -14,7 +12,7 @@ export function handleBrowserOverlay() {
         button.addEventListener('click', async (event) => {
             const cameraID = event.target.parentNode.parentNode.getAttribute("camera-id");
             const currentCamConf = loadedCameraConfList[cameraID];
-            const browserOverlay = await createBrowserOverlay(currentCamConf, ITEMS_PER_PAGE, 1);
+            const browserOverlay = await createBrowserOverlay(currentCamConf, 1);
             document.body.appendChild(browserOverlay);
             document.body.classList.add('overlay-open');
             pauseAllStreams();
@@ -22,15 +20,15 @@ export function handleBrowserOverlay() {
     });
 }
 
-async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
+async function createBrowserOverlay(cameraConf, pageNum) {
     // Fetch and process video list
     const videoList = loadedCameraFootageInfo[cameraConf.id];
     const loadedVideoList = videoList;
-    const pageTotalNum = Math.ceil(videoList.length / itemsPerPage);
-    let videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
-
+    let videoListGroupedByDaysAgo = groupItemsByDaysAgo(loadedVideoList);
+    const pageTotalNum = Object.keys(videoListGroupedByDaysAgo).length;
+    
     // Create UI elements
-    let browserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
+    let browserTable = createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf);
     const browserHeader = createBrowserHeader();
     browserHeader.classList.add("overlay-item");
     let browserFooter = createBrowserFooter(pageNum, pageTotalNum);
@@ -69,8 +67,7 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
         }
         
         // Recalculate paginated list and update table/footer
-        videoListPaginated = paginateItems(loadedVideoList, itemsPerPage, pageNum);
-        const newBrowserTable = createBrowserTable(pageNum, videoListPaginated, cameraConf);
+        const newBrowserTable = createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf);
         const newBrowserFooter = createBrowserFooter(pageNum, pageTotalNum);
 
         browserOverlay.replaceChild(newBrowserTable, browserTable);
@@ -82,20 +79,7 @@ async function createBrowserOverlay(cameraConf, itemsPerPage, pageNum) {
     return browserOverlay;
 }
 
-
-function paginateItems(items, itemsPerPage, pageNumber) {
-    // Calculate the starting index
-    const startIndex = (pageNumber - 1) * itemsPerPage;
-    // Calculate the ending index
-    const endIndex = startIndex + itemsPerPage;
-
-    // Slice the items array to get the items for the requested page
-    const paginatedItems = items.slice(startIndex, endIndex);
-
-    return paginatedItems;
-}
-
-function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
+function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
     const element = document.createElement("div");
     element.id = "browserTable";
 
@@ -106,9 +90,9 @@ function createBrowserTable(pageNum, paginatedVideoList, cameraConf) {
     const tableBody = table.querySelector(`tbody`);
 
     // Populate the table with video items
-    paginatedVideoList.forEach((videoInfoEntry, index) => {
+    videoListGroupedByDaysAgo[pageNum - 1].forEach((videoInfoEntry, index) => {
         console.log(videoInfoEntry);
-        const id = index + (pageNum - 1) * ITEMS_PER_PAGE;
+        const id = index;
         const splitVideoName = splitVideoFilename(videoInfoEntry.file);
         const dayMonthNames = getDayAndMonthNames(
             splitVideoName.day,
