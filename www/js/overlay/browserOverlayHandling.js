@@ -119,8 +119,7 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
         tableBody.appendChild(newRow);
     });
 
-    element.appendChild(tableBody);
-
+    element.appendChild(table);
     return element;
 }
 
