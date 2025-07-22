@@ -143,6 +143,11 @@ function createTableRow(rowData, videoInfoEntry, cameraConf) {
         createFootageOverlay(cameraConf, videoInfoEntry.file);
     });
 
+    // Disable the button if video is being recorded
+    if (rowData[6] === "REC") {
+        button.setAttribute("disabled", true);
+    }
+
     // Create a new cell and append the button to it
     const buttonCell = newRow.insertCell();
     buttonCell.appendChild(button);
