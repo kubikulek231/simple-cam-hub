@@ -6,7 +6,7 @@ SLEEP_TIME=305  # Sleep time between checks (in seconds)
 
 JSON_FILE="$RECORD_DIR/footage_info.json"
 
-echo "[INFO] Starting fetching script for $JRECORD_DIR to fetch info about video files with $RECORD_EXT and their .ok files..."
+echo "[INFO] Starting fetching script for $RECORD_DIR to fetch info about video files with $RECORD_EXT and their .ok files..."
 
 while true; do
     # Start JSON array
