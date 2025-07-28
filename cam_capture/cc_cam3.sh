@@ -132,6 +132,23 @@ cleanup() {
 trap cleanup SIGINT SIGTERM
 
 
+# Monitor FFmpeg processes to ensure they are running
+(
+  while true; do
+    sleep 30
+    if ! ps -p $FFMPEG_RECORD_PID > /dev/null; then
+      echo "[ERROR] FFmpeg recording process is not running!"
+      cleanup
+    fi
+    if ! ps -p $FFMPEG_LIVE_PID > /dev/null; then
+      echo "[ERROR] FFmpeg live process is not running!"
+      cleanup
+    fi
+  done
+) &
+FFMPEG_MONITOR_PID=$!
+
+
 # === WAIT AND MONITOR ALL BACKGROUND PROCESSES ===
 # Use wait -n to detect if any background process exits early or with error
 while true; do
