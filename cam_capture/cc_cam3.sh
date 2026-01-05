@@ -15,6 +15,7 @@ RECORD_DIR="/home/raspberrypi5/footage/cam3"   # Long-term MKV recordings direct
 HLS_SEGMENT_TIME=5                             # HLS segment duration in seconds
 RECORD_SEGMENT_TIME=1800                       # Recording segment duration in seconds
 GSTREAMER_WARMUP_TIME=15                       # Seconds to wait for GStreamer pipelines to warm up
+LAT=1000									   # Latency to smooth out the saved footage (in ms)
 
 
 # === SETUP ===
@@ -40,11 +41,14 @@ GST_LIVE_PID=$!
 # === START GSTREAMER: MAIN Stream for Recording ===
 # This pipeline pulls the main stream (high res) and writes it into a second FIFO.
 # FFmpeg will segment this into 1-hour MKV files with timestamped filenames.
-echo "[GStreamer] Starting MAIN stream for recording..."
-gst-launch-1.0 -e rtspsrc location="$RTSP_MAIN" latency=100 ! \
-  rtph265depay ! h265parse ! mpegtsmux ! identity sync=true ! filesink location="$TMP_DIR/stream_record.ts" &
+gst-launch-1.0 -e \
+  rtspsrc location="$RTSP_MAIN" latency=$LAT ! \
+  rtpjitterbuffer latency=$LAT ! \
+  rtph265depay ! h265parse ! \
+  mpegtsmux ! \
+  identity sync=true ! \
+  filesink location="$TMP_DIR/stream_record.ts" sync=false &
 GST_RECORD_PID=$!
-
 
 sleep $GSTREAMER_WARMUP_TIME  # Let GStreamer pipelines warm up
 
@@ -60,12 +64,12 @@ FFMPEG_LIVE_PID=$!
 
 # === START FFMPEG: Recording to MKV ===
 echo "[FFmpeg] Starting $RECORD_SEGMENT_TIME second MKV recording with timestamped filenames..."
-ffmpeg -fflags +genpts -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
-  -segment_time "$RECORD_SEGMENT_TIME" -reset_timestamps 1 -strftime 1 \
+ffmpeg -fflags +genpts -y -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
+  -segment_time "$RECORD_SEGMENT_TIME" -segment_atclocktime 1 \
+  -reset_timestamps 1 \
+  -strftime 1 \
   -segment_list "$RECORD_DIR/segments.txt" \
-  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4" &
-FFMPEG_RECORD_PID=$!
-
+  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4"
 
 # Monitor segment list for new files and check integrity
 (
