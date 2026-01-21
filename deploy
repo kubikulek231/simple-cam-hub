@@ -1,22 +1,24 @@
 #!/bin/bash
 # simple-cctv-hub deployment script
-#
-# This script deploys the web files, systemd services, and NGINX configuration
-# for the simple-cctv-hub project. It preserves cam* directories in the web root.
-#
-# Usage:
-#   ./deploy [--force|-f]
-#
-# Options:
-#   --force, -f   Force redeployment of all files and services, regardless of
-#                 whether they have changed.
 
+# --- colors & log helpers ---
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
-LOCAL_DIR=~/simple-cctv-hub/www        # Path to your local directory
-TARGET_DIR=/var/www/html               # Target directory on the server
+log_info()  { echo -e "[INFO]  $1"; }
+log_warn()  { echo -e "${YELLOW}[WARN]  $1${NC}"; }
+log_error() { echo -e "${RED}[ERROR] $1${NC}"; }
+log_ok()    { echo -e "${GREEN}[OK]    $1${NC}"; }
+# -----------------------------
 
-DEVELOPMENT_USER=kubikulek231          # Development user
-PUBLISH_USER=raspberrypi5			   # Publish/target user
+LOCAL_DIR=~/simple-cctv-hub/www
+TARGET_DIR=/var/www/html
+
+DEVELOPMENT_USER=kubikulek231
+PUBLISH_USER=raspberrypi5
 
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_FOOTAGE_CAMS=(cam1 cam2 cam3)
@@ -46,15 +48,11 @@ SERVICE_SCRIPT_FI_FETCH_CAM1_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_
 SERVICE_SCRIPT_FI_FETCH_CAM2_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam2.sh
 SERVICE_SCRIPT_FI_FETCH_CAM3_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam3.sh
 
-
-# Determine if running as publish user or development user
 DEVELOPMENT=1
 if [ "$USER" = "$PUBLISH_USER" ]; then
     DEVELOPMENT=0
 fi
 
-
-# List of service files and their target names (extract filename only for systemctl)
 declare -A SERVICES=(
     ["cc_cam1.service"]="$SERVICE_CC_CAM1_PATH"
     ["cc_cam2.service"]="$SERVICE_CC_CAM2_PATH"
@@ -65,7 +63,6 @@ declare -A SERVICES=(
     ["fi_fetch_cam3.service"]="$SERVICE_FI_FETCH_CAM3_PATH"
 )
 
-# List of service scripts to check and redeploy if changed
 declare -A SERVICE_SCRIPTS=(
     ["cc_cam1.service"]="$SERVICE_SCRIPT_CC_CAM1_PATH"
     ["cc_cam2.service"]="$SERVICE_SCRIPT_CC_CAM2_PATH"
@@ -76,8 +73,6 @@ declare -A SERVICE_SCRIPTS=(
     ["fi_fetch_cam3.service"]="$SERVICE_SCRIPT_FI_FETCH_CAM3_PATH"
 )
 
-
-# Parse --force or -f argument
 FORCE=0
 for arg in "$@"; do
     if [[ "$arg" == "--force" || "$arg" == "-f" ]]; then
@@ -85,28 +80,24 @@ for arg in "$@"; do
     fi
 done
 
-
-# Helper: Compare two files, return true if different, false if same
 check_and_save_if_changed() {
     local src_file=$1
     local dst_file=$2
 
     if [ "$FORCE" -eq 1 ]; then
-        echo "Force mode: redeploying $dst_file."
-        return 0  # Always redeploy
+        log_info "Force mode: redeploying $dst_file."
+        return 0
     fi
 
     if ! sudo diff -q "$src_file" "$dst_file" > /dev/null 2>&1; then
-        echo "Change detected for $dst_file."
-        return 0  # files are different
+        log_info "Change detected for $dst_file."
+        return 0
     else
-        echo "$dst_file is up to date, no changes needed."
-        return 1  # files are the same
+        log_info "$dst_file is up to date, no changes needed."
+        return 1
     fi
 }
 
-
-# Function to update systemd service files, reload and restart
 update_service() {
     local service_name=$1
     local service_script_path=$2
@@ -117,127 +108,112 @@ update_service() {
     local script_changed=1
     local service_changed=1
 
-    # Check if the service script changed
     if [ -f "$service_script_path" ]; then
         local system_script_path="/usr/local/bin/$(basename "$service_script_path")"
         if check_and_save_if_changed "$service_script_path" "$system_script_path"; then
             script_changed=0
             sudo cp "$service_script_path" "$system_script_path"
             sudo chmod +x "$system_script_path"
-            dos2unix "$system_script_path"
+            sudo dos2unix "$system_script_path"
         fi
     fi
 
-    # Check if the service file changed
     if check_and_save_if_changed "$local_service_file" "$system_service_file"; then
         service_changed=0
         cp "$local_service_file" "$tmp_service_file"
-        dos2unix "$tmp_service_file"
+        sudo dos2unix "$tmp_service_file"
         sudo cp "$tmp_service_file" "$system_service_file"
     fi
 
-    # Only reload/restart if either changed
     if [ $script_changed -eq 0 ] || [ $service_changed -eq 0 ]; then
-        echo "Reloading and restarting $service_name ..."
+        log_info "Reloading and restarting $service_name ..."
         sudo systemctl daemon-reload
-        sudo systemctl restart "$service_name"
-        sudo systemctl enable "$service_name"
+        if sudo systemctl restart "$service_name"; then
+            sudo systemctl enable "$service_name"
+            log_ok "Service $service_name restarted and enabled."
+        else
+            log_error "Failed to restart $service_name."
+        fi
     else
-        echo "No changes for $service_name or its script. Skipping update."
+        log_info "No changes for $service_name or its script. Skipping update."
     fi
 }
 
-
 if [ "$DEVELOPMENT" -eq 0 ]; then
-    # Production: update all services
     for svc_name in "${!SERVICES[@]}"; do
         update_service "$svc_name" "${SERVICE_SCRIPTS[$svc_name]}" "${SERVICES[$svc_name]}"
     done
 else
-    echo "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
+    log_info "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
 fi
 
-
-# Remove everything in $TARGET_DIR except cam* directories
-echo "Cleaning $TARGET_DIR except cam* directories ..."
+log_info "Cleaning $TARGET_DIR except cam* directories ..."
 shopt -s extglob
 sudo rm -rf $TARGET_DIR/!(cam*)
 
-# Copy local directory to target directory (will not overwrite cam* dirs)
-# Convert all files in $LOCAL_DIR to Unix line endings before copying
-echo "Converting $LOCAL_DIR files using dos2unix ..."
-find "$LOCAL_DIR" -type f -exec dos2unix -q {} +
-echo "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
+log_info "Converting $LOCAL_DIR files using dos2unix ..."
+find "$LOCAL_DIR" -type f -exec sudo dos2unix -q {} +
+log_info "Copying files from $LOCAL_DIR to $TARGET_DIR ..."
 sudo cp -rf $LOCAL_DIR/* $TARGET_DIR/
 
-# Set ownership to www-data for the web root directory
-echo "Setting permissions for $TARGET_DIR ..."
-sudo chown -R $USER:www-data $TARGET_DIR  # Set group to www-data
+log_info "Setting permissions for $TARGET_DIR ..."
+sudo chown -R $USER:www-data $TARGET_DIR
 sudo chmod -R 755 $TARGET_DIR
 
-# Create symbolic link to the footage directory
-echo "Creating symbolic link to the CCTV footage directory ..."
-sudo ln -s $CCTV_FOOTAGE_DIR $CCTV_WWW_DIR
+log_info "Creating symbolic link to the CCTV footage directory ..."
+sudo ln -s $CCTV_FOOTAGE_DIR $CCTV_WWW_DIR 2>/dev/null || true
 
-echo "Create www-data group and add www-data user to it ..."
-sudo groupadd www-data || true
+log_info "Create www-data group and add www-data user to it ..."
+sudo groupadd www-data 2>/dev/null || true
 sudo usermod -aG www-data www-data
-
 
 NGINX_TMP_CUSTOM_CONF_PATH="/tmp/custom_nginx.conf"
 NGINX_TMP_NEW_CONF_PATH="/tmp/nginx.conf.new"
 
-# Set the new nginx conf
-echo "Checking for NGINX configuration changes ..."
-sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" > "$NGINX_TMP_CUSTOM_CONF_PATH"
-dos2unix "$NGINX_TMP_CUSTOM_CONF_PATH"
+log_info "Checking for NGINX configuration changes ..."
+sed "s/${NGINX_TEMPLATE_TARGET_USER_KEYWORD}/$USER/g" "$NGINX_TEMPLATE_PATH" \
+  | sudo tee "$NGINX_TMP_CUSTOM_CONF_PATH" > /dev/null
+sudo dos2unix "$NGINX_TMP_CUSTOM_CONF_PATH"
 
 if check_and_save_if_changed "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"; then
     sudo cp "$NGINX_TMP_CUSTOM_CONF_PATH" "$NGINX_DEFAULT_CONF_PATH"
-    echo "Checking the new conf file ..."
+    log_info "Checking the new conf file ..."
     if sudo nginx -t; then
-        echo "Configuration test passed. Restarting NGINX ..."
+        log_ok "Configuration test passed. Restarting NGINX ..."
         if sudo systemctl restart nginx; then
-            echo "NGINX successfully restarted."
+            log_ok "NGINX successfully restarted."
         else
-            echo "Failed to restart NGINX. Please check the logs."
+            log_error "Failed to restart NGINX. Please check the logs."
         fi
     else
-        echo "Error: NGINX configuration test failed. Please check your configuration."
+        log_error "NGINX configuration test failed. Please check your configuration."
         exit 1
     fi
 else
-    echo "NGINX configuration is up to date, no changes needed."
+    log_info "NGINX configuration is up to date, no changes needed."
 fi
 
-
-# Create footage dir if it doesn't exist
 if [ ! -d "$CCTV_FOOTAGE_DIR" ]; then
-    echo "Creating CCTV footage directory at $CCTV_FOOTAGE_DIR ..."
+    log_info "Creating CCTV footage directory at $CCTV_FOOTAGE_DIR ..."
     mkdir -p "$CCTV_FOOTAGE_DIR"
 else
-    echo "Footage directory already exists, skipping creation."
+    log_info "Footage directory already exists, skipping creation."
 fi
 
-
-# Seed the footage directory with sample video files
 if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then
-    dos2unix "$CCTV_SEED_FOOTAGE_SCRIPT"
-    echo "Seeding CCTV footage directory with sample files ..."
+    sudo dos2unix "$CCTV_SEED_FOOTAGE_SCRIPT"
+    log_info "Seeding CCTV footage directory with sample files ..."
     "$CCTV_SEED_FOOTAGE_SCRIPT"
 else
-    echo "CCTV footage directory already seeded, skipping."
+    log_info "CCTV footage directory already seeded, skipping."
 fi
 
-
-# Set ownership to www-data for the footage directory
-echo "Setting permissions for $CCTV_WWW_DIR ..."
-sudo chown -R $USER:www-data $CCTV_WWW_DIR  # Set group to www-data
+log_info "Setting permissions for $CCTV_WWW_DIR ..."
+sudo chown -R $USER:www-data $CCTV_WWW_DIR
 sudo chmod -R 755 $CCTV_WWW_DIR
 
-echo "Setting permissions for $CCTV_FOOTAGE_DIR ..."
-sudo chown -R $USER:www-data $CCTV_FOOTAGE_DIR  # Set group to www-data
+log_info "Setting permissions for $CCTV_FOOTAGE_DIR ..."
+sudo chown -R $USER:www-data $CCTV_FOOTAGE_DIR
 sudo chmod -R 755 $CCTV_FOOTAGE_DIR
 
-
-echo "Deployment complete!"
+log_ok "Deployment complete!"
