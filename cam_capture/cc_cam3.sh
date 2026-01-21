@@ -33,14 +33,20 @@ mkfifo "$TMP_DIR/stream_record.ts"
 # This pipeline pulls the sub stream (lower res) and writes it into a FIFO.
 # FFmpeg will pick it up and segment it into HLS for web playback.
 echo "[GStreamer] Starting SUB stream for live HLS..."
-gst-launch-1.0 -e rtspsrc location="$RTSP_SUB" latency=100 ! \
-  rtph265depay ! h265parse ! mpegtsmux ! identity sync=true ! filesink location="$TMP_DIR/stream_live.ts" &
+gst-launch-1.0 -e \
+  rtspsrc location="$RTSP_SUB" latency=$LAT ! \
+  rtpjitterbuffer latency=$LAT ! \
+  rtph265depay ! h265parse ! \
+  mpegtsmux ! \
+  identity sync=true ! \
+  filesink location="$TMP_DIR/stream_live.ts" sync=false &
 GST_LIVE_PID=$!
 
 
 # === START GSTREAMER: MAIN Stream for Recording ===
 # This pipeline pulls the main stream (high res) and writes it into a second FIFO.
 # FFmpeg will segment this into 1-hour MKV files with timestamped filenames.
+echo "[GStreamer] Starting MAIN stream for recording..."
 gst-launch-1.0 -e \
   rtspsrc location="$RTSP_MAIN" latency=$LAT ! \
   rtpjitterbuffer latency=$LAT ! \
@@ -64,35 +70,28 @@ FFMPEG_LIVE_PID=$!
 
 # === START FFMPEG: Recording to MKV ===
 echo "[FFmpeg] Starting $RECORD_SEGMENT_TIME second MKV recording with timestamped filenames..."
-ffmpeg -fflags +genpts -y -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
-  -segment_time "$RECORD_SEGMENT_TIME" -segment_atclocktime 1 \
-  -reset_timestamps 1 \
-  -strftime 1 \
+ffmpeg -fflags +genpts -y -re -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
+  -segment_time "$RECORD_SEGMENT_TIME" -reset_timestamps 1 -strftime 1 \
   -segment_list "$RECORD_DIR/segments.txt" \
-  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4"
+  "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4" &
+FFMPEG_RECORD_PID=$!
 
-# Monitor segment list for new files and check integrity
+
 (
   tail -Fn0 "$RECORD_DIR/segments.txt" | while read FILE
   do
-    # Remove carriage returns and whitespace
     FILE=$(echo "$FILE" | tr -d '\r\n[:space:]')
     FILE_PATH="$RECORD_DIR/$FILE"
-    echo "[CHECK] Processing file: $FILE_PATH"
-    # Only process if file exists and is not empty
+    DETECTED_TIME=$(date +%s)
+    echo "[CHECK] Processing file: $FILE_PATH (detected at $DETECTED_TIME)"
     if [[ -f "$FILE_PATH" && -s "$FILE_PATH" ]]; then
-      # Get duration with ffprobe (returns empty if file is corrupt)
+      sleep 3
       DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$FILE_PATH")
       if [[ -n "$DURATION" ]]; then
-        END_TIME=$(date +%s)
         echo "duration=$DURATION" > "${FILE_PATH}.ok"
         echo "segment_time=$RECORD_SEGMENT_TIME" >> "${FILE_PATH}.ok"
-        echo "end_time=$END_TIME" >> "${FILE_PATH}.ok"
-        if [[ -f "${FILE_PATH}.ok" ]]; then
-          echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION, end time $END_TIME."
-        else
-          echo "[ERROR] ffprobe passed but failed to create ${FILE_PATH}.ok!"
-        fi
+        echo "end_time=$DETECTED_TIME" >> "${FILE_PATH}.ok"
+        echo "[INFO] Integrity OK: ${FILE_PATH}.ok created with duration $DURATION, end time $DETECTED_TIME."
       else
         echo "[WARN] File $FILE_PATH failed ffprobe check, not marking as OK."
       fi
@@ -104,23 +103,18 @@ ffmpeg -fflags +genpts -y -i "$TMP_DIR/stream_record.ts" -c copy -f segment \
 INTEGRITY_CHECKER_PID=$!
 
 
-# Periodically trim segments.txt to last 100 lines (truncate in-place)
-(
-  while true; do
-    TMP=$(mktemp)
-    tail -n 100 "$RECORD_DIR/segments.txt" > "$TMP" && cat "$TMP" > "$RECORD_DIR/segments.txt"
-    rm -f "$TMP"
-    sleep 600  # Run every 10 minutes
-  done
-) &
-TRIM_SEGMENTS_PID=$!
-
-
 # Periodically clean up old HLS segments, keeping only the last 10
 (
   while true; do
-    ls -1t "$OUTPUT_DIR"/segment_*.m4s 2>/dev/null | tail -n +11 | xargs -r rm --
-    sleep 10
+    echo "[INFO] Cleaning up old HLS segments..."
+
+    find "$OUTPUT_DIR" -maxdepth 1 -type f -name 'segment_*.m4s' \
+      -printf '%T@ %p\n' \
+    | sort -nr \
+    | awk 'NR>10 {print $2}' \
+    | xargs -r rm --
+
+    sleep 30
   done
 ) &
 CLEANUP_HLS_PID=$!

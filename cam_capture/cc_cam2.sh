@@ -33,8 +33,13 @@ mkfifo "$TMP_DIR/stream_record.ts"
 # This pipeline pulls the sub stream (lower res) and writes it into a FIFO.
 # FFmpeg will pick it up and segment it into HLS for web playback.
 echo "[GStreamer] Starting SUB stream for live HLS..."
-gst-launch-1.0 -e rtspsrc location="$RTSP_SUB" latency=100 ! \
-  rtph265depay ! h265parse ! mpegtsmux ! identity sync=true ! filesink location="$TMP_DIR/stream_live.ts" &
+gst-launch-1.0 -e \
+  rtspsrc location="$RTSP_SUB" latency=$LAT ! \
+  rtpjitterbuffer latency=$LAT ! \
+  rtph265depay ! h265parse ! \
+  mpegtsmux ! \
+  identity sync=true ! \
+  filesink location="$TMP_DIR/stream_live.ts" sync=false &
 GST_LIVE_PID=$!
 
 
@@ -102,7 +107,13 @@ INTEGRITY_CHECKER_PID=$!
 (
   while true; do
     echo "[INFO] Cleaning up old HLS segments..."
-    ls -1t "$OUTPUT_DIR"/segment_*.m4s 2>/dev/null | tail -n +11 | xargs -r rm --
+
+    find "$OUTPUT_DIR" -maxdepth 1 -type f -name 'segment_*.m4s' \
+      -printf '%T@ %p\n' \
+    | sort -nr \
+    | awk 'NR>10 {print $2}' \
+    | xargs -r rm --
+
     sleep 30
   done
 ) &
