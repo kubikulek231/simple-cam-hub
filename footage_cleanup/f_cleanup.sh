@@ -11,7 +11,7 @@ DIRECTORIES=(
 )
 
 # Maximum size allowed (in GB) before deleting old files
-MAX_SIZE=200
+MAX_SIZE=250
 
 # Function to log messages with timestamp (stdout only)
 log() {
