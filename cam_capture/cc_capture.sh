@@ -23,9 +23,11 @@ SEGMENT_TIME=1800
 LATENCY=1000
 
 # === SETUP ===
-mkdir -p "$OUTPUT_DIR" "$RECORD_DIR" "$TMP_DIR" "$LOG_DIR"
-rm -rf "$OUTPUT_DIR"/* "$TMP_DIR"
-mkfifo "$TMP_DIR/live.ts" "$TMP_DIR/record.ts"
+mkdir -p "$OUTPUT_DIR" "$RECORD_DIR" "$TMP_DIR" "$LOG_DIR" || { echo "ERROR: Failed to create directories"; exit 1; }
+sudo chmod 755 "$OUTPUT_DIR" "$RECORD_DIR" "$TMP_DIR" "$LOG_DIR" 2>/dev/null || true
+rm -rf "$TMP_DIR"/* "$OUTPUT_DIR"/*
+[[ -d "$TMP_DIR" ]] || { echo "ERROR: $TMP_DIR not found after mkdir"; exit 1; }
+mkfifo "$TMP_DIR/live.ts" "$TMP_DIR/record.ts" || { echo "ERROR: Failed to create FIFOs in $TMP_DIR"; exit 1; }
 
 log() { 
   printf '[%s] [%-8s] %s\n' "$(date '+%H:%M:%S')" "$1" "$2" | tee -a "$LOG_DIR/main.log"
@@ -39,25 +41,15 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-# === GSTREAMER: RTSP→TS with packet loss logging ===
-# Tee splits stream: one path for mux+record, one for diagnostics
+# === GSTREAMER: RTSP→TS ===
 launch_gst() {
   local name=$1 rtsp=$2 output=$3
-  log "INFO" "Starting GStreamer $name (RTSP: ${rtsp%/*/*/*}...)"
+  log "INFO" "Starting GStreamer $name"
   
-  gst-launch-1.0 -e \
-    rtspsrc location="$rtsp" latency=$LATENCY timeout=5000 \
-      connection-speed=0 protocols=tcp drop-on-latency=true ! \
-    rtpjitterbuffer latency=$LATENCY ! \
-    rtph265depay ! h265parse ! \
-    "tee name=src \
-      src. ! queue ! mpegtsmux ! filesink location=$output sync=false \
-      src. ! queue leaky=2 max-size-buffers=10 ! fakesink dump=true" \
-    2>&1 | tee "$LOG_DIR/gst_${name}.log" | \
-    grep -iE "drop|lost|error|eos|timeout" | while read -r line; do
-      log "GST_${name}" "$line"  # ROOT CAUSE: packet drops from RTSP
-    done &
-  echo $!
+  (gst-launch-1.0 -e rtspsrc location="$rtsp" latency=$LATENCY timeout=5000 connection-speed=0 protocols=tcp drop-on-latency=true ! rtpjitterbuffer latency=$LATENCY ! rtph265depay ! h265parse ! tee name=src ! queue ! mpegtsmux ! filesink location="$output" sync=false src. ! queue leaky=2 max-size-buffers=10 ! fakesink dump=true >>"$LOG_DIR/gst_${name}.log" 2>&1 &) &
+  disown
+  # Give GStreamer time to start
+  sleep 1
 }
 
 # === FFMPEG: TS→HLS ===
@@ -88,18 +80,14 @@ launch_ffmpeg_record() {
 # === MAIN ===
 log "INIT" "CAM$CAM capture starting"
 
-GST_LIVE=$(launch_gst "LIVE" "$RTSP_SUB" "$TMP_DIR/live.ts")
-GST_RECORD=$(launch_gst "RECORD" "$RTSP_MAIN" "$TMP_DIR/record.ts")
-sleep 2
+launch_gst "LIVE" "$RTSP_SUB" "$TMP_DIR/live.ts"
+launch_gst "RECORD" "$RTSP_MAIN" "$TMP_DIR/record.ts"
+sleep 3
 
-FFMPEG_HLS=$(launch_ffmpeg_hls)
-FFMPEG_RECORD=$(launch_ffmpeg_record)
+launch_ffmpeg_hls
+launch_ffmpeg_record
 
 log "INFO" "All services online"
 
-# === BASIC HEALTH MONITOR (optional restart on hard crash) ===
-while sleep 30; do
-  for pid in "$GST_LIVE" "$GST_RECORD" "$FFMPEG_HLS" "$FFMPEG_RECORD"; do
-    kill -0 "$pid" 2>/dev/null || { log "ERROR" "PID $pid died"; cleanup; }
-  done
-done
+# Keep script alive
+wait
