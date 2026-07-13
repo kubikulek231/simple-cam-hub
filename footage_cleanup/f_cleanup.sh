@@ -36,7 +36,7 @@ while true; do
 
         # If the folder size exceeds the threshold, delete the oldest file
         if [ "$CURRENT_SIZE_GB" -gt "$MAX_SIZE" ]; then
-            OLDEST_FILE=$(find "$DIRECTORY" -type f -printf '%T+ %p\n' | sort | head -n 1 | cut -d' ' -f2-)
+            OLDEST_FILE=$(find "$DIRECTORY" -type f -printf '%T@ %p\n' | sort -n | head -n 1 | cut -d' ' -f2-)
             if [ -n "$OLDEST_FILE" ]; then
                 log "Deleting the oldest file: $OLDEST_FILE"
                 rm -f "$OLDEST_FILE"
