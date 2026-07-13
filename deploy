@@ -17,14 +17,11 @@ log_ok()    { echo -e "${GREEN}[OK]    $1${NC}"; }
 LOCAL_DIR=~/simple-cctv-hub/www
 TARGET_DIR=/var/www/html
 
-DEVELOPMENT_USER=kubikulek231
 PUBLISH_USER=raspberrypi5
 
 CCTV_FOOTAGE_DIR=~/footage
 CCTV_FOOTAGE_CAMS=(cam1 cam2 cam3)
-CCTV_FOOTAGE_DOWNLOAD_URL="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h265/1080/Big_Buck_Bunny_1080_10s_10MB.mp4"
 CCTV_WWW_DIR=/var/www/html/footage
-CCTV_SEED_FOOTAGE_SCRIPT=~/simple-cctv-hub/deploy_scripts/seed_footage
 
 # Setup script paths for each component
 CAM_CAPTURE_SETUP=~/simple-cctv-hub/cam_capture/setup.sh
@@ -35,11 +32,6 @@ FOOTAGE_INFO_FETCH_SETUP=~/simple-cctv-hub/footage_info_fetch/setup.sh
 NGINX_TEMPLATE_PATH=~/simple-cctv-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
-
-DEVELOPMENT=1
-if [ "$USER" = "$PUBLISH_USER" ]; then
-    DEVELOPMENT=0
-fi
 
 FORCE=0
 for arg in "$@"; do
@@ -99,11 +91,7 @@ deploy_services() {
     log_ok "All services deployed successfully"
 }
 
-if [ "$DEVELOPMENT" -eq 0 ]; then
-    deploy_services
-else
-    log_info "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
-fi
+deploy_services
 
 log_info "Cleaning $TARGET_DIR except cam* directories ..."
 cd "$TARGET_DIR"
@@ -155,20 +143,10 @@ else
     log_info "NGINX configuration is up to date, no changes needed."
 fi
 
-if [ ! -d "$CCTV_FOOTAGE_DIR" ]; then
-    log_info "Creating CCTV footage directory at $CCTV_FOOTAGE_DIR ..."
-    mkdir -p "$CCTV_FOOTAGE_DIR"
-else
-    log_info "Footage directory already exists, skipping creation."
-fi
-
-if [ ! -d "$CCTV_FOOTAGE_DIR/${CCTV_FOOTAGE_CAMS[0]}" ]; then
-    sudo dos2unix "$CCTV_SEED_FOOTAGE_SCRIPT"
-    log_info "Seeding CCTV footage directory with sample files ..."
-    "$CCTV_SEED_FOOTAGE_SCRIPT"
-else
-    log_info "CCTV footage directory already seeded, skipping."
-fi
+log_info "Creating CCTV footage directory structure..."
+for cam in "${CCTV_FOOTAGE_CAMS[@]}"; do
+    mkdir -p "$CCTV_FOOTAGE_DIR/$cam"
+done
 
 log_info "Setting permissions for $CCTV_WWW_DIR ..."
 sudo chown -R $USER:www-data $CCTV_WWW_DIR
