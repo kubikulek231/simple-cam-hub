@@ -35,7 +35,11 @@ export async function fetchAndStoreFootageInfo() {
 
 export async function fetchFootageInfo(jsonUrl) {
     try {
-        const response = await fetch(jsonUrl);
+        // Add cache-buster query parameter (timestamp) to force fresh fetch
+        const separator = jsonUrl.includes('?') ? '&' : '?';
+        const cacheUrl = jsonUrl + separator + 't=' + Date.now();
+        
+        const response = await fetch(cacheUrl, { cache: 'no-store' });
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         loadedCameraFootageInfo = Array.isArray(data) ? data : [];
@@ -46,3 +50,4 @@ export async function fetchFootageInfo(jsonUrl) {
         return loadedCameraFootageInfo;
     }
 }
+

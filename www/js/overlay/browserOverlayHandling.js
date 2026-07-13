@@ -99,7 +99,7 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
             splitVideoName.month,
             splitVideoName.year
         );
-        const hourString = String(splitVideoName.hour);
+        const hourString = String(splitVideoName.hour).padStart(2, "0");
         const minuteString = String(splitVideoName.minute).padStart(2, "0");
         const isVideoValid = evaluateVideoStatus(videoInfoEntry, splitVideoName, 0.9);
 
@@ -294,6 +294,14 @@ function evaluateVideoStatus(videoInfoEntry, splitVideoName, thresh = 0.05) {
     const endTimestamp = videoInfoEntry.end_time;
     const duration = videoInfoEntry.duration;
     const segmentTime = videoInfoEntry.segment_time;
+
+    // Validate required data exists and is not null
+    if (duration === null || duration === 'null' || 
+        segmentTime === null || segmentTime === 'null' || 
+        endTimestamp === null || endTimestamp === 'null') {
+        console.warn("Missing metadata for video:", videoInfoEntry.file);
+        return false;
+    }
 
     console.log("splitVideoName:", splitVideoName);
     console.log("startTimestamp: ", startTimestamp);
