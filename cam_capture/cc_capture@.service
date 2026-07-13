@@ -1,0 +1,29 @@
+# === UNIFIED SYSTEMD SERVICE TEMPLATE ===
+# For each camera, create a copy with different CAM number:
+#   cp cc_capture@.service /etc/systemd/system/cc_capture@1.service
+#   cp cc_capture@.service /etc/systemd/system/cc_capture@2.service
+#   cp cc_capture@.service /etc/systemd/system/cc_capture@3.service
+# Then: systemctl enable --now cc_capture@{1,2,3}.service
+
+[Unit]
+Description=Camera Capture Service CAM%i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/raspberrypi5/simple-cctv-hub/cam_capture
+ExecStart=/home/raspberrypi5/simple-cctv-hub/cam_capture/cc_capture.sh %i
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cc_cam%i
+
+# Resource limits
+CPUQuota=150%
+MemoryLimit=2G
+
+[Install]
+WantedBy=multi-user.target

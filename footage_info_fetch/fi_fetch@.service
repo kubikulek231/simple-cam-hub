@@ -1,0 +1,17 @@
+[Unit]
+Description=Footage Info Fetch Service CAM%i
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/raspberrypi5/simple-cctv-hub/footage_info_fetch
+ExecStart=/usr/local/bin/fi_fetch.sh %i
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fi_fetch_cam%i
+
+[Install]
+WantedBy=multi-user.target

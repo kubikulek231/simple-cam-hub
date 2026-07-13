@@ -26,52 +26,20 @@ CCTV_FOOTAGE_DOWNLOAD_URL="https://test-videos.co.uk/vids/bigbuckbunny/mp4/h265/
 CCTV_WWW_DIR=/var/www/html/footage
 CCTV_SEED_FOOTAGE_SCRIPT=~/simple-cctv-hub/deploy_scripts/seed_footage
 
+# Setup script paths for each component
+CAM_CAPTURE_SETUP=~/simple-cctv-hub/cam_capture/setup.sh
+FOOTAGE_CLEANUP_SETUP=~/simple-cctv-hub/footage_cleanup/setup.sh
+FOOTAGE_INFO_FETCH_SETUP=~/simple-cctv-hub/footage_info_fetch/setup.sh
+
+# Web hosting configuration
 NGINX_TEMPLATE_PATH=~/simple-cctv-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
 NGINX_DEFAULT_CONF_PATH=/etc/nginx/nginx.conf
-
-SERVICE_CC_CAM1_PATH=~/simple-cctv-hub/cam_capture/cc_cam1.service
-SERVICE_CC_CAM2_PATH=~/simple-cctv-hub/cam_capture/cc_cam2.service
-SERVICE_CC_CAM3_PATH=~/simple-cctv-hub/cam_capture/cc_cam3.service
-SERVICE_F_CLEANUP_PATH=~/simple-cctv-hub/footage_cleanup/f_cleanup.service
-
-SERVICE_SCRIPT_CC_CAM1_PATH=~/simple-cctv-hub/cam_capture/cc_cam1.sh
-SERVICE_SCRIPT_CC_CAM2_PATH=~/simple-cctv-hub/cam_capture/cc_cam2.sh
-SERVICE_SCRIPT_CC_CAM3_PATH=~/simple-cctv-hub/cam_capture/cc_cam3.sh
-SERVICE_SCRIPT_F_CLEANUP_PATH=~/simple-cctv-hub/footage_cleanup/f_cleanup.sh
-
-SERVICE_FI_FETCH_CAM1_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam1.service
-SERVICE_FI_FETCH_CAM2_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam2.service
-SERVICE_FI_FETCH_CAM3_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam3.service
-
-SERVICE_SCRIPT_FI_FETCH_CAM1_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam1.sh
-SERVICE_SCRIPT_FI_FETCH_CAM2_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam2.sh
-SERVICE_SCRIPT_FI_FETCH_CAM3_PATH=~/simple-cctv-hub/footage_info_fetch/fi_fetch_cam3.sh
 
 DEVELOPMENT=1
 if [ "$USER" = "$PUBLISH_USER" ]; then
     DEVELOPMENT=0
 fi
-
-declare -A SERVICES=(
-    ["cc_cam1.service"]="$SERVICE_CC_CAM1_PATH"
-    ["cc_cam2.service"]="$SERVICE_CC_CAM2_PATH"
-    ["cc_cam3.service"]="$SERVICE_CC_CAM3_PATH"
-    ["f_cleanup.service"]="$SERVICE_F_CLEANUP_PATH"
-    ["fi_fetch_cam1.service"]="$SERVICE_FI_FETCH_CAM1_PATH"
-    ["fi_fetch_cam2.service"]="$SERVICE_FI_FETCH_CAM2_PATH"
-    ["fi_fetch_cam3.service"]="$SERVICE_FI_FETCH_CAM3_PATH"
-)
-
-declare -A SERVICE_SCRIPTS=(
-    ["cc_cam1.service"]="$SERVICE_SCRIPT_CC_CAM1_PATH"
-    ["cc_cam2.service"]="$SERVICE_SCRIPT_CC_CAM2_PATH"
-    ["cc_cam3.service"]="$SERVICE_SCRIPT_CC_CAM3_PATH"
-    ["f_cleanup.service"]="$SERVICE_SCRIPT_F_CLEANUP_PATH"
-    ["fi_fetch_cam1.service"]="$SERVICE_SCRIPT_FI_FETCH_CAM1_PATH"
-    ["fi_fetch_cam2.service"]="$SERVICE_SCRIPT_FI_FETCH_CAM2_PATH"
-    ["fi_fetch_cam3.service"]="$SERVICE_SCRIPT_FI_FETCH_CAM3_PATH"
-)
 
 FORCE=0
 for arg in "$@"; do
@@ -98,58 +66,52 @@ check_and_save_if_changed() {
     fi
 }
 
-update_service() {
-    local service_name=$1
-    local service_script_path=$2
-    local local_service_file=$3
-    local system_service_file="/etc/systemd/system/$service_name"
-    local tmp_service_file="/tmp/$service_name"
+# === DEPLOY ORCHESTRATOR ===
+# Calls setup scripts for each component
 
-    local script_changed=1
-    local service_changed=1
-
-    if [ -f "$service_script_path" ]; then
-        local system_script_path="/usr/local/bin/$(basename "$service_script_path")"
-        if check_and_save_if_changed "$service_script_path" "$system_script_path"; then
-            script_changed=0
-            sudo cp "$service_script_path" "$system_script_path"
-            sudo chmod +x "$system_script_path"
-            sudo dos2unix "$system_script_path"
-        fi
+deploy_services() {
+    log_info "Orchestrating service deployments..."
+    
+    if [[ ! -f "$CAM_CAPTURE_SETUP" ]]; then
+        log_error "Camera capture setup script not found: $CAM_CAPTURE_SETUP"
+        return 1
     fi
-
-    if check_and_save_if_changed "$local_service_file" "$system_service_file"; then
-        service_changed=0
-        cp "$local_service_file" "$tmp_service_file"
-        sudo dos2unix "$tmp_service_file"
-        sudo cp "$tmp_service_file" "$system_service_file"
+    
+    if [[ ! -f "$FOOTAGE_CLEANUP_SETUP" ]]; then
+        log_error "Footage cleanup setup script not found: $FOOTAGE_CLEANUP_SETUP"
+        return 1
     fi
-
-    if [ $script_changed -eq 0 ] || [ $service_changed -eq 0 ]; then
-        log_info "Reloading and restarting $service_name ..."
-        sudo systemctl daemon-reload
-        if sudo systemctl restart "$service_name"; then
-            sudo systemctl enable "$service_name"
-            log_ok "Service $service_name restarted and enabled."
-        else
-            log_error "Failed to restart $service_name."
-        fi
-    else
-        log_info "No changes for $service_name or its script. Skipping update."
+    
+    if [[ ! -f "$FOOTAGE_INFO_FETCH_SETUP" ]]; then
+        log_error "Footage info fetch setup script not found: $FOOTAGE_INFO_FETCH_SETUP"
+        return 1
     fi
+    
+    log_info "Running camera capture setup..."
+    bash "$CAM_CAPTURE_SETUP" || { log_error "Camera capture setup failed"; return 1; }
+    
+    log_info "Running footage cleanup setup..."
+    bash "$FOOTAGE_CLEANUP_SETUP" || { log_error "Footage cleanup setup failed"; return 1; }
+    
+    log_info "Running footage info fetch setup..."
+    bash "$FOOTAGE_INFO_FETCH_SETUP" || { log_error "Footage info fetch setup failed"; return 1; }
+    
+    log_ok "All services deployed successfully"
 }
 
 if [ "$DEVELOPMENT" -eq 0 ]; then
-    for svc_name in "${!SERVICES[@]}"; do
-        update_service "$svc_name" "${SERVICE_SCRIPTS[$svc_name]}" "${SERVICES[$svc_name]}"
-    done
+    deploy_services
 else
     log_info "Development mode enabled (DEVELOPMENT=$DEVELOPMENT). Skipping service deployment."
 fi
 
 log_info "Cleaning $TARGET_DIR except cam* directories ..."
-shopt -s extglob
-sudo rm -rf $TARGET_DIR/!(cam*)
+cd "$TARGET_DIR"
+for item in *; do
+    [[ "$item" != cam* ]] && sudo rm -rf "$item"
+done
+cd - > /dev/null
+
 
 log_info "Converting $LOCAL_DIR files using dos2unix ..."
 find "$LOCAL_DIR" -type f -exec sudo dos2unix -q {} +
