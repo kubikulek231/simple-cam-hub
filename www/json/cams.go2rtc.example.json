@@ -9,7 +9,7 @@
       "liveMode": "go2rtc-webrtc",
       "go2rtcBasePath": "/go2rtc",
       "go2rtcViewerPage": "stream.html",
-      "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+      "go2rtcMode": "mse",
       "go2rtcStream": "cam1_main"
     },
     {
@@ -21,7 +21,7 @@
       "liveMode": "go2rtc-webrtc",
       "go2rtcBasePath": "/go2rtc",
       "go2rtcViewerPage": "stream.html",
-      "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+      "go2rtcMode": "mse",
       "go2rtcStream": "cam2_main"
     },
     {
@@ -33,7 +33,7 @@
       "liveMode": "go2rtc-webrtc",
       "go2rtcBasePath": "/go2rtc",
       "go2rtcViewerPage": "stream.html",
-      "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+      "go2rtcMode": "mse",
       "go2rtcStream": "cam3_main"
     }
   ]

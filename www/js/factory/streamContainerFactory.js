@@ -37,7 +37,7 @@ function createGo2RtcWebRtcElement(cameraConf) {
     const streamName = cameraConf.go2rtcStream || '';
     const basePath = cameraConf.go2rtcBasePath || '/go2rtc';
     const viewerPage = cameraConf.go2rtcViewerPage || 'stream.html';
-    const mode = cameraConf.go2rtcMode || 'webrtc,webrtc/tcp';
+    const mode = cameraConf.go2rtcMode || 'mse';
 
     const iframe = document.createElement('iframe');
     iframe.classList.add('stream-iframe');
@@ -65,11 +65,115 @@ function createGo2RtcWebRtcElement(cameraConf) {
     streamWrapper.classList.add('stream-wrapper');
     streamWrapper.appendChild(iframe);
 
+    configureGo2RtcMinimalControls(iframe);
+
     return streamWrapper;
 }
 
+function configureGo2RtcMinimalControls(iframe) {
+    iframe.addEventListener('load', () => {
+        let doc;
+
+        try {
+            doc = iframe.contentDocument || iframe.contentWindow?.document;
+        } catch (error) {
+            console.warn('Unable to access go2rtc iframe document:', error);
+            return;
+        }
+
+        if (!doc) return;
+
+        const applyVideoSettings = () => {
+            const videos = doc.querySelectorAll('video');
+            videos.forEach(video => {
+                video.controls = false;
+                video.muted = true;
+                video.playsInline = true;
+            });
+        };
+
+        applyVideoSettings();
+
+        if (doc.body) {
+            const observer = new MutationObserver(() => applyVideoSettings());
+            observer.observe(doc.body, { childList: true, subtree: true });
+        }
+    });
+}
+
+function getIframeVideos(iframe) {
+    try {
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return [];
+        return Array.from(doc.querySelectorAll('video'));
+    } catch (error) {
+        console.warn('Unable to access go2rtc iframe videos:', error);
+        return [];
+    }
+}
+
+function videoHasAudio(video) {
+    if (!video) return false;
+
+    const stream = video.srcObject;
+    if (stream && typeof stream.getAudioTracks === 'function') {
+        return stream.getAudioTracks().length > 0;
+    }
+
+    if (video.audioTracks && typeof video.audioTracks.length === 'number') {
+        return video.audioTracks.length > 0;
+    }
+
+    return false;
+}
+
+function createLiveAudioToggle(iframe) {
+    const button = document.createElement('button');
+    button.classList.add('button', 'button-live-audio');
+
+    const updateButton = () => {
+        const videos = getIframeVideos(iframe);
+        const audioVideos = videos.filter(videoHasAudio);
+        const anyUnmuted = audioVideos.some(video => !video.muted);
+
+        button.style.display = audioVideos.length > 0 ? 'inline-flex' : 'none';
+        button.textContent = anyUnmuted ? '🔇' : '🔊';
+        button.title = anyUnmuted ? 'Ztlumit' : 'Zapnout zvuk';
+        button.disabled = audioVideos.length === 0;
+    };
+
+    button.addEventListener('click', () => {
+        const videos = getIframeVideos(iframe).filter(videoHasAudio);
+        if (videos.length === 0) {
+            updateButton();
+            return;
+        }
+
+        const anyUnmuted = videos.some(video => !video.muted);
+        const nextMutedState = anyUnmuted;
+
+        videos.forEach(video => {
+            video.muted = nextMutedState;
+            if (!nextMutedState && typeof video.play === 'function') {
+                video.play().catch(() => {});
+            }
+        });
+
+        updateButton();
+    });
+
+    updateButton();
+
+    iframe.addEventListener('load', () => {
+        setTimeout(updateButton, 300);
+        setTimeout(updateButton, 1000);
+    });
+
+    return button;
+}
+
 // Create controls container (like createCustomControls in videoFactory.js)
-function createStreamControls() {
+function createStreamControls(cameraConf, liveVideo) {
     const controls = document.createElement('div');
     controls.classList.add('stream-controls-container');
 
@@ -87,6 +191,14 @@ function createStreamControls() {
 
     controls.appendChild(enlargeButton);
     controls.appendChild(browseButton);
+
+    if (cameraConf.liveMode === 'go2rtc-webrtc') {
+        const iframe = liveVideo.querySelector('.stream-iframe');
+        if (iframe) {
+            const audioToggle = createLiveAudioToggle(iframe);
+            controls.appendChild(audioToggle);
+        }
+    }
 
     return controls;
 }
@@ -125,7 +237,7 @@ export function createStreamContainer(cameraConf, showControls = true, showTitle
     
     // Controls
     if (showControls) {
-        const streamControls = createStreamControls();
+        const streamControls = createStreamControls(cameraConf, liveVideo);
         streamContainer.appendChild(streamControls);
     }
     

@@ -32,6 +32,7 @@ webrtc:
   listen: ":8555"
 
 streams:
+  # Live view aliases use main camera streams.
   cam1_main: ${CAM1_MAIN}
   cam2_main: ${CAM2_MAIN}
   cam3_main: ${CAM3_MAIN}
