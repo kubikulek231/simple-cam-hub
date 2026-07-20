@@ -70,7 +70,7 @@ launch_ffmpeg_record() {
   ffmpeg -fflags +genpts -loglevel warning -y -re \
     -i "$TMP_DIR/record.ts" \
     -c copy -f segment \
-    -segment_time "$SEGMENT_TIME" -segment_atclip_frame 1 -reset_timestamps 0 \
+    -segment_time "$SEGMENT_TIME" -reset_timestamps 0 \
     -strftime 1 -segment_list "$RECORD_DIR/segments.txt" \
     -segment_list_flags +live \
     "$RECORD_DIR/%Y-%m-%d_%H-%M-%S.mp4" 2>&1 | tee -a "$LOG_DIR/ffmpeg_record.log" &

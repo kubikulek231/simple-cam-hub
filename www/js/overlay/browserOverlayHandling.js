@@ -1,4 +1,4 @@
-import { fetchVideoList, splitVideoFilename, getDayAndMonthNames, getStartTimestampFromSplitVideoName, groupItemsByDaysAgo } from "../loaders/camFootageLoading.js";
+import { fetchVideoList, splitVideoFilename, getDayAndMonthNames, groupItemsByDaysAgo } from "../loaders/camFootageLoading.js";
 import { loadedCameraConfList } from "../loaders/camConfLoader.js";
 import { createFootageOverlay } from "./footageOverlayHandling.js";
 import { resumeAllStreams, pauseAllStreams } from "../utils.js";
@@ -25,10 +25,11 @@ async function createBrowserOverlay(cameraConf, pageNum) {
     const videoList = loadedCameraFootageInfo[cameraConf.id];
     const loadedVideoList = videoList;
     let videoListGroupedByDaysAgo = groupItemsByDaysAgo(loadedVideoList);
-    const pageTotalNum = Object.keys(videoListGroupedByDaysAgo).length;
+    const pagedVideoGroups = createPagedVideoGroups(videoListGroupedByDaysAgo);
+    const pageTotalNum = pagedVideoGroups.length;
     
     // Create UI elements
-    let browserTable = createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf);
+    let browserTable = createBrowserTable(pageNum, pagedVideoGroups, cameraConf);
     const browserHeader = createBrowserHeader();
     browserHeader.classList.add("overlay-item");
     let browserFooter = createBrowserFooter(pageNum, pageTotalNum);
@@ -67,7 +68,7 @@ async function createBrowserOverlay(cameraConf, pageNum) {
         }
         
         // Recalculate paginated list and update table/footer
-        const newBrowserTable = createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf);
+        const newBrowserTable = createBrowserTable(pageNum, pagedVideoGroups, cameraConf);
         const newBrowserFooter = createBrowserFooter(pageNum, pageTotalNum);
 
         browserOverlay.replaceChild(newBrowserTable, browserTable);
@@ -90,7 +91,8 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
     const tableBody = table.querySelector(`tbody`);
 
     // Populate the table with video items
-    videoListGroupedByDaysAgo[pageNum - 1].forEach((videoInfoEntry, index) => {
+    const pageVideos = videoListGroupedByDaysAgo[pageNum - 1] || [];
+    pageVideos.forEach((videoInfoEntry, index) => {
         console.log(videoInfoEntry);
         const id = index;
         const splitVideoName = splitVideoFilename(videoInfoEntry.file);
@@ -101,9 +103,7 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
         );
         const hourString = String(splitVideoName.hour).padStart(2, "0");
         const minuteString = String(splitVideoName.minute).padStart(2, "0");
-        const isVideoValid = evaluateVideoStatus(videoInfoEntry, splitVideoName, 0.9);
-
-        let validStatus = isVideoValid ? "OK" : "X";
+        const validStatus = getVideoStatusLabel(videoInfoEntry);
 
         const rowData = [
             id,
@@ -121,6 +121,21 @@ function createBrowserTable(pageNum, videoListGroupedByDaysAgo, cameraConf) {
 
     element.appendChild(table);
     return element;
+}
+
+function createPagedVideoGroups(groupedByDaysAgo) {
+    const pages = Object.keys(groupedByDaysAgo)
+        .map(Number)
+        .sort((a, b) => a - b)
+        .map((dayKey) => groupedByDaysAgo[dayKey])
+        .filter((group) => Array.isArray(group) && group.length > 0);
+
+    // Keep one empty page to preserve overlay behavior when no footage exists.
+    if (pages.length === 0) {
+        return [[]];
+    }
+
+    return pages;
 }
 
 function createTableRow(rowData, videoInfoEntry, cameraConf) {
@@ -289,37 +304,17 @@ function createBrowserDescriptor(cameraConf) {
     return descriptorContainer;
 }
 
-function evaluateVideoStatus(videoInfoEntry, splitVideoName, thresh = 0.05) {
-    const startTimestamp = getStartTimestampFromSplitVideoName(splitVideoName);
-    const endTimestamp = videoInfoEntry.end_time;
-    const duration = videoInfoEntry.duration;
-    const segmentTime = videoInfoEntry.segment_time;
+function getVideoStatusLabel(videoInfoEntry) {
+    const status = videoInfoEntry?.is_ok;
 
-    // Validate required data exists and is not null
-    if (duration === null || duration === 'null' || 
-        segmentTime === null || segmentTime === 'null' || 
-        endTimestamp === null || endTimestamp === 'null') {
-        console.warn("Missing metadata for video:", videoInfoEntry.file);
-        return false;
+    if (status === true || status === "true") {
+        return "OK";
     }
 
-    console.log("splitVideoName:", splitVideoName);
-    console.log("startTimestamp: ", startTimestamp);
-    console.log("endTimestamp: ", endTimestamp);
-    console.log("duration: ", duration);
-    console.log("segmentTime: ", segmentTime);
+    if (status === false || status === "false") {
+        return "X";
+    }
 
-    // Calculate actual segment length from timestamps
-    const actualSegmentLength = endTimestamp - startTimestamp;
-
-    const tolerance = segmentTime * thresh;
-
-    // Check if both duration and actual segment length are within tolerance of segment_time
-    const durationOk = Math.abs(duration - segmentTime) <= tolerance;
-    const segmentLengthOk = Math.abs(actualSegmentLength - segmentTime) <= tolerance;
-
-    console.log("durationOk: ", durationOk);
-    console.log("segmentLengthOk: ", segmentLengthOk);
-
-    return durationOk && segmentLengthOk;
+    // Metadata may still be in progress for newest segments.
+    return "?";
 }
