@@ -20,6 +20,13 @@ sudo cp "$SCRIPT" "$SYS_SCRIPT"
 sudo chmod +x "$SYS_SCRIPT"
 sudo dos2unix "$SYS_SCRIPT" 2>/dev/null || true
 
+echo "[INFO] Removing legacy fi_fetch_cam services if present..."
+for legacy in fi_fetch_cam1.service fi_fetch_cam2.service fi_fetch_cam3.service; do
+  sudo systemctl disable --now "$legacy" 2>/dev/null || true
+  sudo rm -f "/etc/systemd/system/$legacy"
+done
+sudo systemctl daemon-reload
+
 echo "[INFO] Installing services..."
 for cam_num in 1 2 3; do
   sudo mkdir -p "/var/log/fi_fetch_cam$cam_num"

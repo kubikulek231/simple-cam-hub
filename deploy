@@ -28,6 +28,16 @@ CAM_CAPTURE_SETUP=~/simple-cctv-hub/cam_capture/setup.sh
 FOOTAGE_CLEANUP_SETUP=~/simple-cctv-hub/footage_cleanup/setup.sh
 FOOTAGE_INFO_FETCH_SETUP=~/simple-cctv-hub/footage_info_fetch/setup.sh
 
+# go2rtc deployment assets
+GO2RTC_SETUP_SCRIPT=~/simple-cctv-hub/deploy_scripts/generate_go2rtc_yaml.sh
+GO2RTC_BIN_SOURCE=~/simple-cctv-hub/go2rtc_linux_arm64
+GO2RTC_BIN_TARGET_DIR=~/go2rtc
+GO2RTC_BIN_TARGET=~/go2rtc/go2rtc
+GO2RTC_CONFIG_SOURCE=~/simple-cctv-hub/go2rtc/go2rtc.yaml
+GO2RTC_CONFIG_TARGET=~/go2rtc/go2rtc.yaml
+GO2RTC_SERVICE_SOURCE=~/simple-cctv-hub/go2rtc/systemd/go2rtc.service
+GO2RTC_SERVICE_TARGET=/etc/systemd/system/go2rtc.service
+
 # Web hosting configuration
 NGINX_TEMPLATE_PATH=~/simple-cctv-hub/nginx.conf.template
 NGINX_TEMPLATE_TARGET_USER_KEYWORD=PLACEHOLDER_USER
@@ -91,7 +101,50 @@ deploy_services() {
     log_ok "All services deployed successfully"
 }
 
+deploy_go2rtc() {
+    log_info "Deploying go2rtc..."
+
+    if [[ ! -f "$GO2RTC_SETUP_SCRIPT" ]]; then
+        log_warn "go2rtc setup script not found: $GO2RTC_SETUP_SCRIPT"
+        return 0
+    fi
+
+    if [[ ! -f "$GO2RTC_BIN_SOURCE" ]]; then
+        log_warn "go2rtc binary not found at $GO2RTC_BIN_SOURCE. Skipping go2rtc deploy."
+        return 0
+    fi
+
+    if [[ ! -f "$GO2RTC_SERVICE_SOURCE" ]]; then
+        log_warn "go2rtc service file not found: $GO2RTC_SERVICE_SOURCE"
+        return 0
+    fi
+
+    mkdir -p "$GO2RTC_BIN_TARGET_DIR"
+
+    log_info "Generating go2rtc config..."
+    bash "$GO2RTC_SETUP_SCRIPT" || { log_error "Failed to generate go2rtc config"; return 1; }
+
+    log_info "Installing go2rtc binary and config..."
+    cp -f "$GO2RTC_BIN_SOURCE" "$GO2RTC_BIN_TARGET"
+    chmod +x "$GO2RTC_BIN_TARGET"
+    cp -f "$GO2RTC_CONFIG_SOURCE" "$GO2RTC_CONFIG_TARGET"
+
+    log_info "Installing go2rtc systemd service..."
+    sudo cp -f "$GO2RTC_SERVICE_SOURCE" "$GO2RTC_SERVICE_TARGET"
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now go2rtc.service
+    sudo systemctl restart go2rtc.service
+
+    if systemctl is-active --quiet go2rtc.service; then
+        log_ok "go2rtc is active"
+    else
+        log_error "go2rtc failed to start"
+        return 1
+    fi
+}
+
 deploy_services
+deploy_go2rtc
 
 log_info "Cleaning $TARGET_DIR except cam* directories ..."
 cd "$TARGET_DIR"

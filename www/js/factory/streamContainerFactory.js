@@ -1,5 +1,11 @@
 // Create the video element and its wrapper (like createVideoElement + wrapper in videoFactory.js)
-function createLiveVideoElement(videoSource, controls = true) {
+function createLiveVideoElement(cameraConf, controls = true) {
+    const videoSource = cameraConf.source;
+
+    if (cameraConf.liveMode === 'go2rtc-webrtc') {
+        return createGo2RtcWebRtcElement(cameraConf);
+    }
+
     const video = document.createElement('video');
     video.controls = controls;
     video.muted = true;
@@ -23,6 +29,41 @@ function createLiveVideoElement(videoSource, controls = true) {
     const streamWrapper = document.createElement('div');
     streamWrapper.classList.add("stream-wrapper");
     streamWrapper.appendChild(video);
+
+    return streamWrapper;
+}
+
+function createGo2RtcWebRtcElement(cameraConf) {
+    const streamName = cameraConf.go2rtcStream || '';
+    const basePath = cameraConf.go2rtcBasePath || '/go2rtc';
+    const viewerPage = cameraConf.go2rtcViewerPage || 'stream.html';
+    const mode = cameraConf.go2rtcMode || 'webrtc,webrtc/tcp';
+
+    const iframe = document.createElement('iframe');
+    iframe.classList.add('stream-iframe');
+    iframe.allow = 'autoplay; fullscreen; microphone; camera';
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('loading', 'lazy');
+
+    if (!streamName) {
+        iframe.srcdoc = '<!doctype html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100%;background:#000;color:#fff;font-family:sans-serif;">Missing go2rtcStream in cams.json</body></html>';
+    } else {
+        const normalizedBase = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+        const params = new URLSearchParams();
+        params.set('src', streamName);
+
+        if (viewerPage === 'stream.html') {
+            params.set('mode', mode);
+        } else if (viewerPage === 'webrtc.html') {
+            params.set('media', 'video+audio');
+        }
+
+        iframe.src = `${normalizedBase}/${viewerPage}?${params.toString()}`;
+    }
+
+    const streamWrapper = document.createElement('div');
+    streamWrapper.classList.add('stream-wrapper');
+    streamWrapper.appendChild(iframe);
 
     return streamWrapper;
 }
@@ -66,7 +107,7 @@ export function createStreamContainer(cameraConf, showControls = true, showTitle
         streamWrapper.classList.add("rounded-corners");
     }
 
-    const liveVideo = createLiveVideoElement(cameraConf.source, false);
+    const liveVideo = createLiveVideoElement(cameraConf, false);
 
     // Compose the structure
     streamWrapper.appendChild(liveVideo);

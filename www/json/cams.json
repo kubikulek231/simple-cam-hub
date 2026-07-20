@@ -4,6 +4,11 @@
           "id": 0,
           "title": "Stodola",
           "source": "/cam1/index.m3u8",
+          "liveMode": "go2rtc-webrtc",
+          "go2rtcBasePath": "/go2rtc",
+          "go2rtcViewerPage": "stream.html",
+          "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+          "go2rtcStream": "cam1_main",
           "footageInfoPath": "/footage/cam1/footage_info.json",
           "footageDirectory": "/footage/cam1"
       },
@@ -11,6 +16,11 @@
           "id": 1,
           "title": "Cesta",
           "source": "/cam2/index.m3u8",
+          "liveMode": "go2rtc-webrtc",
+          "go2rtcBasePath": "/go2rtc",
+          "go2rtcViewerPage": "stream.html",
+          "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+          "go2rtcStream": "cam2_main",
           "footageInfoPath": "/footage/cam2/footage_info.json",
           "footageDirectory": "/footage/cam2"
       },
@@ -18,6 +28,11 @@
           "id": 2,
           "title": "Terasa",
           "source": "/cam3/index.m3u8",
+          "liveMode": "go2rtc-webrtc",
+          "go2rtcBasePath": "/go2rtc",
+          "go2rtcViewerPage": "stream.html",
+          "go2rtcMode": "mse,hls,mp4,webrtc/tcp,webrtc",
+          "go2rtcStream": "cam3_main",
           "footageInfoPath": "/footage/cam3/footage_info.json",
           "footageDirectory": "/footage/cam3"
       }

@@ -315,6 +315,20 @@ function getVideoStatusLabel(videoInfoEntry) {
         return "X";
     }
 
+    // Fallback: infer status from quality_estimation if available.
+    const quality = Number(videoInfoEntry?.quality_estimation);
+    if (Number.isFinite(quality)) {
+        return quality >= 90 ? "OK" : "X";
+    }
+
+    // Secondary fallback: infer status from duration vs configured segment_time.
+    const duration = Number(videoInfoEntry?.duration);
+    const segmentTime = Number(videoInfoEntry?.segment_time);
+    if (Number.isFinite(duration) && Number.isFinite(segmentTime) && segmentTime > 0) {
+        const tolerance = Math.max(segmentTime * 0.1, 60);
+        return Math.abs(duration - segmentTime) <= tolerance ? "OK" : "X";
+    }
+
     // Metadata may still be in progress for newest segments.
     return "?";
 }

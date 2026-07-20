@@ -1,0 +1,19 @@
+[Unit]
+Description=go2rtc streaming proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=raspberrypi5
+Group=www-data
+WorkingDirectory=/home/raspberrypi5/go2rtc
+ExecStart=/home/raspberrypi5/go2rtc/go2rtc -config /home/raspberrypi5/go2rtc/go2rtc.yaml
+Restart=always
+RestartSec=3
+
+# Raise limit for multiple browser viewers
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target

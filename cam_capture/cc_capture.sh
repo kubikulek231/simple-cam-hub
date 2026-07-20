@@ -21,6 +21,7 @@ LOG_DIR="/var/log/cam${CAM}_capture"
 
 SEGMENT_TIME=1800
 LATENCY=1000
+ENABLE_LEGACY_LIVE_STREAM=0
 
 # === SETUP ===
 mkdir -p "$OUTPUT_DIR" "$RECORD_DIR" "$TMP_DIR" "$LOG_DIR" || { echo "ERROR: Failed to create directories"; exit 1; }
@@ -80,14 +81,22 @@ launch_ffmpeg_record() {
 # === MAIN ===
 log "INIT" "CAM$CAM capture starting"
 
-launch_gst "LIVE" "$RTSP_SUB" "$TMP_DIR/live.ts"
+if [[ "$ENABLE_LEGACY_LIVE_STREAM" == "1" ]]; then
+  launch_gst "LIVE" "$RTSP_SUB" "$TMP_DIR/live.ts"
+fi
 launch_gst "RECORD" "$RTSP_MAIN" "$TMP_DIR/record.ts"
 sleep 3
 
-launch_ffmpeg_hls
+if [[ "$ENABLE_LEGACY_LIVE_STREAM" == "1" ]]; then
+  launch_ffmpeg_hls
+fi
 launch_ffmpeg_record
 
-log "INFO" "All services online"
+if [[ "$ENABLE_LEGACY_LIVE_STREAM" == "1" ]]; then
+  log "INFO" "All services online (legacy live + recording)"
+else
+  log "INFO" "All services online (recording only; live handled by go2rtc)"
+fi
 
 # Keep script alive
 wait
